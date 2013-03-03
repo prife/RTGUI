@@ -5,8 +5,5 @@ from building import *
 base_objs = SConscript(GetCurrentDir() + '/components/rtgui/SConscript',
 					   variant_dir='build/components/rtgui',
 					   duplicate=0)
-base_objs += SConscript(GetCurrentDir() + '/win32-sim/SConscript',
-					   variant_dir='build/common',
-					   duplicate=0)
 
 Return('base_objs')

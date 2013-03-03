@@ -8,7 +8,6 @@ else:
 
 path_cwd = os.path.normpath(os.getcwd())
 sys.path = sys.path + [os.path.join(RTT_ROOT, 'tools')]
-sys.path = sys.path + [os.path.join(path_cwd, 'win32-sim')]
 sys.path.insert(0, os.path.join(path_cwd, 'components', 'rtgui', 'utils'))
 
 import rtconfig
@@ -33,14 +32,16 @@ if rtconfig.PLATFORM == 'cl':
     oleaut32
     uuid
     odbc32
+    msvcrt
     odbccp32
+    SDL
+    SDLmain
     ''')
     definitions = Split('''
     WIN32
     _DEBUG
     _CONSOLE
     MSVC
-    _TIME_T_DEFINED
     ''')
     env.Append(CCFLAGS=rtconfig.CFLAGS)
     env.Append(LINKFLAGS=rtconfig.LFLAGS)
@@ -83,9 +84,27 @@ exe_dir = 'executables'
 # prepare building environment
 
 base_objs = PrepareBuilding(env, RTT_ROOT, has_libcpu=False, remove_components=['rtgui'])
-base_objs += SConscript(RTT_ROOT + '/bsp/simulator/drivers/SConscript',
-					   variant_dir='build/drivers/',
+
+path_jn = os.path.join
+
+BSP_ROOT = path_jn(RTT_ROOT, 'bsp/simulator')
+
+# make use of bsp/simulator
+sim_objs  = SConscript(path_jn(BSP_ROOT, 'applications/SConscript'),
+					   variant_dir='build/simulator/sim-app',
 					   duplicate=0)
+# remove the staff we don't need. When "bsp" becomes real bsp, this hack
+# could be removed. Remember to update this list if simulator changed.
+SrcRemove(sim_objs, ['application.obj'])
+sim_objs.extend(SConscript(path_jn(BSP_ROOT, 'drivers/SConscript'),
+					   variant_dir='build/simulator/sim-drv',
+					   duplicate=0))
+base_objs.extend(sim_objs)
+
+sdl_lib_path = [os.path.abspath(path_jn(BSP_ROOT, 'SDL/lib/x86'))]
+sdl_include_path = [os.path.abspath(path_jn(BSP_ROOT, 'SDL/include'))]
+env.Append(LIBPATH=sdl_lib_path)
+env.Append(CPPPATH=sdl_include_path)
 
 for exe_name, src_path in TARGETS:
     work_objs = base_objs + SConscript(dirs=[src_path],

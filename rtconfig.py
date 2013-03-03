@@ -100,13 +100,13 @@ elif PLATFORM == 'cl':
 
     if BUILD == 'debug':
         CFLAGS += ' /MTd'
-        LFLAGS += ' /DEBUG'
+        LFLAGS += ' /NODEFAULTLIB:LIBCMTD /DEBUG'
     else:
         CFLAGS += ' /MT'
-        LFLAGS += ''
+        LFLAGS += ' /NODEFAULTLIB:LIBCMT'
 
     CFLAGS += ' /ZI /Od /W 3 /WL '
-    LFLAGS += ' /SUBSYSTEM:CONSOLE /MACHINE:X86 '
+    LFLAGS += ' /SUBSYSTEM:CONSOLE /MACHINE:X86'
 
     CPATH = ''
     LPATH = ''
