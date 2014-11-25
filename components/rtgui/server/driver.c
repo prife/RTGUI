@@ -122,8 +122,9 @@ void rtgui_graphic_driver_get_rect(const struct rtgui_graphic_driver *driver, rt
 {
     RT_ASSERT(rect != RT_NULL);
 
-	/* use default driver */
-	if (driver == RT_NULL) driver = _current_driver;
+    /* use default driver */
+    if (driver == RT_NULL)
+        driver = _current_driver;
 
     rect->x1 = rect->y1 = 0;
     rect->x2 = driver->width;
