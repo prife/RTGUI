@@ -162,13 +162,14 @@ static void rtgui_image_hdc_unload(struct rtgui_image *image)
 
 static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc, struct rtgui_rect *dst_rect)
 {
-    rt_uint16_t y, w, h;
+    rt_uint16_t y, w, h, xoff, yoff;
     struct rtgui_image_hdc *hdc;
 
     RT_ASSERT(image != RT_NULL || dc != RT_NULL || dst_rect != RT_NULL);
 
     /* this dc is not visible */
-    if (rtgui_dc_get_visible(dc) != RT_TRUE) return;
+    if (rtgui_dc_get_visible(dc) != RT_TRUE)
+        return;
 
     hdc = (struct rtgui_image_hdc *) image->data;
     RT_ASSERT(hdc != RT_NULL);
@@ -177,18 +178,41 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc,
 	w = _UI_MIN(image->w, rtgui_rect_width(*dst_rect));
 	h = _UI_MIN(image->h, rtgui_rect_height(*dst_rect));
 
+    xoff = 0;
+    if (dst_rect->x1 < 0)
+    {
+        xoff = -dst_rect->x1;
+        dst_rect->x1 = 0;
+    }
+    yoff = 0;
+    if (dst_rect->y1 < 0)
+    {
+        yoff = -dst_rect->y1;
+        dst_rect->y1 = 0;
+    }
+
+    if (xoff >= w || yoff >= h)
+        return;
+    w -= xoff;
+    h -= yoff;
+
     if (hdc->pixels != RT_NULL)
     {
         rt_uint8_t *ptr;
 
         /* get pixel pointer */
-        ptr = hdc->pixels;
-		if (hdc->pixel_format == rtgui_dc_get_pixel_format(dc) && 
+        ptr = hdc->pixels + hdc->pitch * yoff + hdc->byte_per_pixel * xoff;
+
+		if (hdc->pixel_format == rtgui_dc_get_pixel_format(dc) &&
 			hdc->pixel_format != RTGRAPHIC_PIXEL_FORMAT_ARGB888)
 		{
 	        for (y = 0; y < h; y ++)
 	        {
-	            dc->engine->blit_line(dc, dst_rect->x1, dst_rect->x1 + w, dst_rect->y1 + y, ptr);
+	            dc->engine->blit_line(dc,
+                                      dst_rect->x1,
+                                      dst_rect->x1 + w,
+                                      dst_rect->y1 + y,
+                                      ptr);
 	            ptr += hdc->pitch;
 	        }
 		}
@@ -198,7 +222,7 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc,
 			info.a = 0;
 
 			/* initialize source blit information */
-			info.src = (rt_uint8_t *) hdc->pixels;
+			info.src = hdc->pixels;
 			info.src_h = h;
 			info.src_w = w;
 			info.src_fmt = hdc->pixel_format;
@@ -211,7 +235,7 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc,
 				struct rtgui_dc_buffer *buffer;
 				buffer = (struct rtgui_dc_buffer*)dc;
 
-				info.dst = rtgui_dc_buffer_get_pixel(RTGUI_DC(buffer)) + dst_rect->y1 * buffer->pitch + 
+				info.dst = rtgui_dc_buffer_get_pixel(RTGUI_DC(buffer)) + dst_rect->y1 * buffer->pitch +
 					dst_rect->x1 * rtgui_color_get_bpp(buffer->pixel_format);
 				info.dst_h = h;
 				info.dst_w = w;
@@ -227,7 +251,7 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc,
 				owner = ((struct rtgui_dc_hw*)dc)->owner;
 
 				rtgui_graphic_driver_get_rect(RT_NULL, &r);
-				
+
 				/* blit destination */
 				info.dst = (rt_uint8_t*)hdc->hw_driver->framebuffer;
 				info.dst = info.dst + (owner->extent.y1 + dst_rect->y1) * hdc->hw_driver->pitch +
@@ -236,7 +260,7 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc,
 				info.dst_h = h;
 				info.dst_w = w;
 				info.dst_pitch = hdc->hw_driver->pitch;
-				info.dst_skip = info.dst_pitch - info.dst_w * rtgui_color_get_bpp(hdc->hw_driver->pixel_format);			
+				info.dst_skip = info.dst_pitch - info.dst_w * rtgui_color_get_bpp(hdc->hw_driver->pixel_format);
 			}
 
 			rtgui_blit(&info);
@@ -245,19 +269,28 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc,
     else
     {
         rt_uint8_t *ptr;
-        ptr = rtgui_malloc(hdc->pitch);
-        if (ptr == RT_NULL) return; /* no memory */
+        ptr = rtgui_malloc(hdc->byte_per_pixel * w);
+        if (ptr == RT_NULL)
+            return; /* no memory */
 
         /* seek to the begin of pixel data */
-        rtgui_filerw_seek(hdc->filerw, hdc->pixel_offset, RTGUI_FILE_SEEK_SET);
+        rtgui_filerw_seek(hdc->filerw,
+                          hdc->pixel_offset + hdc->pitch * yoff + hdc->byte_per_pixel * xoff,
+                          RTGUI_FILE_SEEK_SET);
 
         for (y = 0; y < h; y ++)
         {
             /* read pixel data */
-            if (rtgui_filerw_read(hdc->filerw, ptr, 1, hdc->pitch) != hdc->pitch)
+            if (rtgui_filerw_read(hdc->filerw, ptr, 1,
+                                  hdc->byte_per_pixel * w) != hdc->byte_per_pixel * w)
                 break; /* read data failed */
 
-            dc->engine->blit_line(dc, dst_rect->x1,  dst_rect->x1 + w, dst_rect->y1 + y, ptr);
+            dc->engine->blit_line(dc,
+                                  dst_rect->x1,
+                                  dst_rect->x1 + w,
+                                  dst_rect->y1 + y,
+                                  ptr);
+            rtgui_filerw_seek(hdc->filerw, hdc->byte_per_pixel * xoff, RTGUI_FILE_SEEK_CUR);
         }
 
         rtgui_free(ptr);
@@ -267,25 +300,45 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc,
 static void rtgui_image_hdcmm_blit(struct rtgui_image *image, struct rtgui_dc *dc, struct rtgui_rect *dst_rect)
 {
     rt_uint8_t *ptr;
-    rt_uint16_t y, w, h;
+    rt_uint16_t y, w, h, xoff, yoff;
     struct rtgui_image_hdcmm *hdc;
 
-    RT_ASSERT(image != RT_NULL || dc != RT_NULL || dst_rect != RT_NULL);
+    RT_ASSERT(image != RT_NULL && dc != RT_NULL && dst_rect != RT_NULL);
 
     /* this dc is not visible */
-    if (rtgui_dc_get_visible(dc) != RT_TRUE) return;
+    if (rtgui_dc_get_visible(dc) != RT_TRUE)
+        return;
 
     hdc = (struct rtgui_image_hdcmm *) image;
-    RT_ASSERT(hdc != RT_NULL);
+    if (!hdc->pixels)
+        return;
 
     /* the minimum rect */
 	w = _UI_MIN(image->w, rtgui_rect_width(*dst_rect));
 	h = _UI_MIN(image->h, rtgui_rect_height(*dst_rect));
 
-    /* get pixel pointer */
-    ptr = hdc->pixels;
+    xoff = 0;
+    if (dst_rect->x1 < 0)
+    {
+        xoff = -dst_rect->x1;
+        dst_rect->x1 = 0;
+    }
+    yoff = 0;
+    if (dst_rect->y1 < 0)
+    {
+        yoff = -dst_rect->y1;
+        dst_rect->y1 = 0;
+    }
 
-    for (y = 0; y < h; y ++)
+    if (xoff >= w || yoff >= h)
+        return;
+    w -= xoff;
+    h -= yoff;
+
+    /* get pixel pointer */
+    ptr = hdc->pixels + hdc->pitch * yoff + hdc->byte_per_pixel * xoff;
+
+    for (y = 0; y < h; y++)
     {
         dc->engine->blit_line(dc, dst_rect->x1, dst_rect->x1 + w, dst_rect->y1 + y, ptr);
         ptr += hdc->pitch;
