@@ -274,10 +274,19 @@ static void rtgui_dc_buffer_fill_rect(struct rtgui_dc *self, struct rtgui_rect *
 
 	_r = *dst_rect;
 	/* parameter checking */
-    if (_r.x1 > dst->width)  _r.x1 = dst->width;
-    if (_r.x2 > dst->width)  _r.x2 = dst->width;
-    if (_r.y1 > dst->height) _r.y1 = dst->height;
-    if (_r.y2 > dst->height) _r.y2 = dst->height;
+    if (_r.x1 > dst->width)
+        return;
+    else if (_r.x1 < 0)
+        _r.x1 = 0;
+    if (_r.x2 > dst->width)
+        _r.x2 = dst->width;
+
+    if (_r.y1 > dst->height)
+        return;
+    else if (_r.y1 < 0)
+        _r.y1 = 0;
+    if (_r.y2 > dst->height)
+        _r.y2 = dst->height;
 	rect = &_r;
 
 	r = RTGUI_RGB_R(dst->gc.background);
