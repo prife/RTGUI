@@ -412,12 +412,16 @@ void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2
 	rtgui_widget_t *owner;
 
 	RT_ASSERT(dst != RT_NULL);
-	if (!rtgui_dc_get_visible(dst)) return;
+	if (!rtgui_dc_get_visible(dst))
+        return;
 	/* we do not support pixel DC */
-	if (_dc_get_pixel(dst, 0, 0) == RT_NULL) return ; 
+	if (_dc_get_pixel(dst, 0, 0) == RT_NULL)
+        return;
 
 	color = rtgui_dc_get_gc(dst)->foreground;
-	bpp = _dc_get_bits_per_pixel(dst); if (bpp < 8) return;
+	bpp = _dc_get_bits_per_pixel(dst);
+    if (bpp < 8)
+        return;
 
     func = _dc_calc_draw_line_func(bpp/8);
     if (!func)
@@ -425,19 +429,17 @@ void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2
         rt_kprintf("dc_draw_line(): Unsupported pixel format\n");
 		return;
     }
-	
+
 	/* perform clip */
 	if (dst->type == RTGUI_DC_CLIENT)
 	{
 		/* get owner */
 		owner = RTGUI_CONTAINER_OF(dst, struct rtgui_widget, dc_type);
-		
+
 		x1 = x1 + owner->extent.x1;
 		x2 = x2 + owner->extent.x1;
 		y1 = y1 + owner->extent.y1;
 		y2 = y2 + owner->extent.y1;
-		if (y1 > y2) _int_swap(y1, y2);
-		if (x1 > x2) _int_swap(x1, x2);
 
 		if (owner->clip.data == RT_NULL)
 		{
@@ -457,7 +459,7 @@ void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2
 			register rt_base_t index;
 
 			for (index = 0; index < rtgui_region_num_rects(&(owner->clip)); index ++)
-	    	{
+            {
 		        rtgui_rect_t *prect;
 		        int draw_x1, draw_x2;
 		        int draw_y1, draw_y2;
@@ -474,7 +476,7 @@ void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2
 		    }
 		}
 	}
-	else 
+	else
 	{
 		if (dst->type == RTGUI_DC_HW)
 		{
@@ -485,8 +487,6 @@ void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2
 			x2 = x2 + owner->extent.x1;
 			y1 = y1 + owner->extent.y1;
 			y2 = y2 + owner->extent.y1;
-			if (y1 > y2) _int_swap(y1, y2);
-			if (x1 > x2) _int_swap(x1, x2);
 		}
 
 		func(dst, x1, y1, x2, y2, color, RT_FALSE);
