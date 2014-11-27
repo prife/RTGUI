@@ -808,89 +808,105 @@ static void rtgui_image_jpeg_unload(struct rtgui_image *image)
 static void rtgui_image_jpeg_blit(struct rtgui_image *image,
                                   struct rtgui_dc *dc, struct rtgui_rect *dst_rect)
 {
-    rt_uint16_t w, h, y;
+    rt_uint16_t y, w, h, xoff, yoff;
     struct rtgui_image_jpeg *jpeg;
 
     jpeg = (struct rtgui_image_jpeg *) image->data;
     RT_ASSERT(image != RT_NULL || dc != RT_NULL || dst_rect != RT_NULL || jpeg != RT_NULL);
 
-    do
+    /* this dc is not visible */
+    if (rtgui_dc_get_visible(dc) != RT_TRUE)
+        return;
+    jpeg->dc = dc;
+
+    xoff = 0;
+    if (dst_rect->x1 < 0)
     {
-        /* this dc is not visible */
-        if (rtgui_dc_get_visible(dc) != RT_TRUE) break;
-        jpeg->dc = dc;
+        xoff = -dst_rect->x1;
+        dst_rect->x1 = 0;
+    }
+    yoff = 0;
+    if (dst_rect->y1 < 0)
+    {
+        yoff = -dst_rect->y1;
+        dst_rect->y1 = 0;
+    }
 
-        /* the minimum rect */
-		w = _UI_MIN(image->w, rtgui_rect_width (*dst_rect));
-		h = _UI_MIN(image->h, rtgui_rect_height(*dst_rect));
+    if (xoff >= image->w || yoff >= image->h)
+        return;
 
-		if (rtgui_dc_get_pixel_format(dc) == RTGRAPHIC_PIXEL_FORMAT_RGB888 &&
-			jpeg->tjpgd.format != 0)
-		{
-			jpeg->tjpgd.format = 0;
-			jpeg->byte_per_pixel = 3;
-		}
-		else if (rtgui_dc_get_pixel_format(dc) == RTGRAPHIC_PIXEL_FORMAT_RGB565 &&
-			jpeg->tjpgd.format != 1)
-		{
-			jpeg->tjpgd.format = 1;
-			jpeg->byte_per_pixel = 2;
-		}
-		
-        if (!jpeg->is_loaded)
+    /* the minimum rect */
+    w = _UI_MIN(image->w - xoff, rtgui_rect_width (*dst_rect));
+    h = _UI_MIN(image->h - yoff, rtgui_rect_height(*dst_rect));
+
+    if (rtgui_dc_get_pixel_format(dc) == RTGRAPHIC_PIXEL_FORMAT_RGB888 &&
+        jpeg->tjpgd.format != 0)
+    {
+        jpeg->tjpgd.format = 0;
+        jpeg->byte_per_pixel = 3;
+    }
+    else if (rtgui_dc_get_pixel_format(dc) == RTGRAPHIC_PIXEL_FORMAT_RGB565 &&
+             jpeg->tjpgd.format != 1)
+    {
+        jpeg->tjpgd.format = 1;
+        jpeg->byte_per_pixel = 2;
+    }
+
+    if (!jpeg->is_loaded)
+    {
+        JRESULT ret;
+
+        /* TODO support xoff/yoff. */
+        jpeg->dst_x = dst_rect->x1;
+        jpeg->dst_y = dst_rect->y1;
+        jpeg->dst_w = w;
+        jpeg->dst_h = h;
+        ret = jd_decomp(&jpeg->tjpgd, tjpgd_out_func, 0);
+        if (ret != JDR_OK)
+            return;
+    }
+    else
+    {
+        if ((rtgui_dc_get_pixel_format(dc) == RTGRAPHIC_PIXEL_FORMAT_RGB888 && jpeg->tjpgd.format == 0) ||
+            (rtgui_dc_get_pixel_format(dc) == RTGRAPHIC_PIXEL_FORMAT_RGB565 && jpeg->tjpgd.format == 1))
         {
-            JRESULT ret;
+            rt_uint16_t imageWidth = image->w * jpeg->byte_per_pixel;
+            rt_uint8_t *src = jpeg->pixels + yoff * imageWidth + xoff + jpeg->byte_per_pixel;
 
-            jpeg->dst_x = dst_rect->x1;
-            jpeg->dst_y = dst_rect->y1;
-            jpeg->dst_w = w;
-            jpeg->dst_h = h;
-            ret = jd_decomp(&jpeg->tjpgd, tjpgd_out_func, 0);
-            if (ret != JDR_OK) break;
+            for (y = 0; y < h; y++)
+            {
+                dc->engine->blit_line(dc,
+                                      dst_rect->x1, dst_rect->x1 + w,
+                                      dst_rect->y1 + y,
+                                      src);
+                src += imageWidth;
+            }
         }
-        else
+        /* if the format is not match, only support DC buffer */
+        else if (dc->type == RTGUI_DC_BUFFER)
         {
-			if ((rtgui_dc_get_pixel_format(dc) == RTGRAPHIC_PIXEL_FORMAT_RGB888 && jpeg->tjpgd.format == 0) ||
-				(rtgui_dc_get_pixel_format(dc) == RTGRAPHIC_PIXEL_FORMAT_RGB565 && jpeg->tjpgd.format == 1))
-			{
-				rt_uint8_t *src = jpeg->pixels;
-				rt_uint16_t imageWidth = image->w * jpeg->byte_per_pixel;
+            struct rtgui_blit_info info;
+            struct rtgui_dc_buffer *buffer;
 
-				for (y = 0; y < h; y++)
-				{
-					dc->engine->blit_line(dc,
-										  dst_rect->x1, dst_rect->x1 + w,
-										  dst_rect->y1 + y,
-										  src);
-					src += imageWidth;
-				}
-			}
-			/* if the format is not match, only support DC buffer */
-			else if (dc->type == RTGUI_DC_BUFFER) 
-			{
-				struct rtgui_blit_info info;
-				struct rtgui_dc_buffer *buffer;
+            buffer = (struct rtgui_dc_buffer*)dc;
 
-				buffer = (struct rtgui_dc_buffer*)dc;
+            info.src = jpeg->pixels + yoff * image->w * jpeg->byte_per_pixel + xoff + jpeg->byte_per_pixel;
+            info.src_h = rtgui_rect_height(*dst_rect);
+            info.src_w = rtgui_rect_width(*dst_rect);
+            info.src_fmt = (jpeg->tjpgd.format == 0? RTGRAPHIC_PIXEL_FORMAT_RGB888 : RTGRAPHIC_PIXEL_FORMAT_RGB565);
+            info.src_pitch = info.src_w * jpeg->byte_per_pixel;
+            info.src_skip = info.src_pitch - info.src_w * jpeg->byte_per_pixel;
 
-				info.src = jpeg->pixels;
-				info.src_h = rtgui_rect_height(*dst_rect);
-				info.src_w = rtgui_rect_width(*dst_rect);
-				info.src_fmt = (jpeg->tjpgd.format == 0? RTGRAPHIC_PIXEL_FORMAT_RGB888 : RTGRAPHIC_PIXEL_FORMAT_RGB565);
-				info.src_pitch = info.src_w * jpeg->byte_per_pixel;
-				info.src_skip = info.src_pitch - info.src_w * jpeg->byte_per_pixel;
+            info.dst = rtgui_dc_buffer_get_pixel(RTGUI_DC(buffer)) + dst_rect->y1 * buffer->pitch +
+                dst_rect->x1 * rtgui_color_get_bpp(buffer->pixel_format);
+            info.dst_h = rtgui_rect_height(*dst_rect);
+            info.dst_w = rtgui_rect_width(*dst_rect);
+            info.dst_fmt = buffer->pixel_format;
+            info.dst_pitch = buffer->pitch;
+            info.dst_skip = info.dst_pitch - info.dst_w * rtgui_color_get_bpp(buffer->pixel_format);
 
-				info.dst = rtgui_dc_buffer_get_pixel(RTGUI_DC(buffer)) + dst_rect->y1 * buffer->pitch + 
-					dst_rect->x1 * rtgui_color_get_bpp(buffer->pixel_format);
-				info.dst_h = rtgui_rect_height(*dst_rect);
-				info.dst_w = rtgui_rect_width(*dst_rect);
-				info.dst_fmt = buffer->pixel_format;
-				info.dst_pitch = buffer->pitch;
-				info.dst_skip = info.dst_pitch - info.dst_w * rtgui_color_get_bpp(buffer->pixel_format);
-
-				rtgui_blit(&info);
-			}
+            rtgui_blit(&info);
         }
-    } while (0);
+    }
 }
 #endif /* defined(RTGUI_IMAGE_TJPGD) */

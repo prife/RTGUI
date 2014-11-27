@@ -174,10 +174,6 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc,
     hdc = (struct rtgui_image_hdc *) image->data;
     RT_ASSERT(hdc != RT_NULL);
 
-    /* the minimum rect */
-	w = _UI_MIN(image->w, rtgui_rect_width(*dst_rect));
-	h = _UI_MIN(image->h, rtgui_rect_height(*dst_rect));
-
     xoff = 0;
     if (dst_rect->x1 < 0)
     {
@@ -191,10 +187,12 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc,
         dst_rect->y1 = 0;
     }
 
-    if (xoff >= w || yoff >= h)
+    if (xoff >= image->w || yoff >= image->h)
         return;
-    w -= xoff;
-    h -= yoff;
+
+    /* the minimum rect */
+    w = _UI_MIN(image->w - xoff, rtgui_rect_width (*dst_rect));
+    h = _UI_MIN(image->h - yoff, rtgui_rect_height(*dst_rect));
 
     if (hdc->pixels != RT_NULL)
     {
@@ -313,10 +311,6 @@ static void rtgui_image_hdcmm_blit(struct rtgui_image *image, struct rtgui_dc *d
     if (!hdc->pixels)
         return;
 
-    /* the minimum rect */
-	w = _UI_MIN(image->w, rtgui_rect_width(*dst_rect));
-	h = _UI_MIN(image->h, rtgui_rect_height(*dst_rect));
-
     xoff = 0;
     if (dst_rect->x1 < 0)
     {
@@ -330,10 +324,12 @@ static void rtgui_image_hdcmm_blit(struct rtgui_image *image, struct rtgui_dc *d
         dst_rect->y1 = 0;
     }
 
-    if (xoff >= w || yoff >= h)
+    if (xoff >= image->w || yoff >= image->h)
         return;
-    w -= xoff;
-    h -= yoff;
+
+    /* the minimum rect */
+    w = _UI_MIN(image->w - xoff, rtgui_rect_width (*dst_rect));
+    h = _UI_MIN(image->h - yoff, rtgui_rect_height(*dst_rect));
 
     /* get pixel pointer */
     ptr = hdc->pixels + hdc->pitch * yoff + hdc->byte_per_pixel * xoff;

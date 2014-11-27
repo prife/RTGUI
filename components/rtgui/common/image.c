@@ -291,7 +291,7 @@ void rtgui_image_blit(struct rtgui_image *image, struct rtgui_dc *dc, struct rtg
     if (rtgui_dc_get_visible(dc) != RT_TRUE) return;
 
 	/* use rect of DC */
-	if (rect == RT_NULL) 
+	if (rect == RT_NULL)
 	{
 		rtgui_dc_get_rect(dc, &r);
 		rect = &r;
