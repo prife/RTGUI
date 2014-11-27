@@ -136,27 +136,30 @@ static void _blit_rotate_FR2FR_SF2B(struct _fb_rect* RTGUI_RESTRICT src,
                                     struct _fb_rect* RTGUI_RESTRICT dst,
                                     const struct rtgui_matrix *invm)
 {
-    int nx, ny;
     rt_uint16_t* RTGUI_RESTRICT srcp = (rt_uint16_t*)src->fb;
     rt_uint16_t* RTGUI_RESTRICT dstp = (rt_uint16_t*)dst->fb;
     int neww = dst->width;
     int newh = dst->height;
     int oriw = src->width;
     int orih = src->height;
+    int nx, ny;
+    int dx, dy;
+
+    /* Delta of bx/by when nx++. */
+    dx = invm->m[0];
+    dy = invm->m[1];
 
     for (ny = dc_point->y; ny < newh; ny++)
     {
         /* Base x, y. */
         int bx, by;
-        int dx, dy;
 
-        dx = invm->m[0];
-        dy = invm->m[1];
         bx = dc_point->x * dx + ny * invm->m[2] + 1024 * invm->m[4];
         by = dc_point->x * dy + ny * invm->m[3] + 1024 * invm->m[5];
 
         for (nx = dc_point->x; nx < neww; nx++, dstp++)
         {
+            /* The coordinate in the source frame. */
             int rx, ry;
 
             bx += dx;
@@ -181,28 +184,31 @@ static void _blit_rotate_FR2FR_SF2B_AA(struct _fb_rect* RTGUI_RESTRICT src,
                                        struct _fb_rect* RTGUI_RESTRICT dst,
                                        struct rtgui_matrix *invm)
 {
-    int nx, ny;
     rt_uint16_t* RTGUI_RESTRICT srcp = (rt_uint16_t*)src->fb;
     rt_uint16_t* RTGUI_RESTRICT dstp = (rt_uint16_t*)dst->fb;
     int neww = dst->width;
     int newh = dst->height;
     int oriw = src->width;
     int orih = src->height;
+    int nx, ny;
+    int dx, dy;
+
+    dx = invm->m[0];
+    dy = invm->m[1];
 
     for (ny = dc_point->y; ny < newh; ny++)
     {
         /* Base x, y. */
         int bx, by;
-        int dx, dy;
-
-        dx = invm->m[0];
-        dy = invm->m[1];
 
         bx = dc_point->x * dx + ny * invm->m[2] + 1024 * invm->m[4];
         by = dc_point->x * dy + ny * invm->m[3] + 1024 * invm->m[5];
 
         for (nx = dc_point->x; nx < neww; nx++, dstp++)
         {
+            /* Color of pixels:
+             *     c00 c01
+             *     c10 c11     */
             rt_uint32_t c00, c01, c10, c11;
             int rx, ry, sx, sy;
 
@@ -259,22 +265,22 @@ static void _blit_rotate_FR2FR_SF4B(struct _fb_rect* RTGUI_RESTRICT src,
                                     struct _fb_rect* RTGUI_RESTRICT dst,
                                     struct rtgui_matrix *invm)
 {
-    int nx, ny;
     rt_uint32_t* RTGUI_RESTRICT srcp = (rt_uint32_t*)src->fb;
     rt_uint32_t* RTGUI_RESTRICT dstp = (rt_uint32_t*)dst->fb;
     int neww = dst->width;
     int newh = dst->height;
     int oriw = src->width;
     int orih = src->height;
+    int nx, ny;
+    int dx, dy;
+
+    dx = invm->m[0];
+    dy = invm->m[1];
 
     for (ny = dc_point->y; ny < newh; ny++)
     {
         /* Base x, y. */
         int bx, by;
-        int dx, dy;
-
-        dx = invm->m[0];
-        dy = invm->m[1];
 
         bx = dc_point->x * dx + ny * invm->m[2] + 1024 * invm->m[4];
         by = dc_point->x * dy + ny * invm->m[3] + 1024 * invm->m[5];
@@ -307,9 +313,9 @@ static void _blit_rotate_FR2FR_SF4B(struct _fb_rect* RTGUI_RESTRICT src,
             }
 
             dpix.blk = *dstp;
-            dpix.d.r = (dpix.d.r - spix.d.r) * a / 32 + dpix.d.r;
-            dpix.d.g = (dpix.d.g - spix.d.g) * a / 32 + dpix.d.g;
-            dpix.d.b = (dpix.d.b - spix.d.b) * a / 32 + dpix.d.b;
+            dpix.d.r = (spix.d.r - dpix.d.r) * a / 32 + dpix.d.r;
+            dpix.d.g = (spix.d.g - dpix.d.g) * a / 32 + dpix.d.g;
+            dpix.d.b = (spix.d.b - dpix.d.b) * a / 32 + dpix.d.b;
             *dstp = dpix.blk;
         }
         dstp += dst->skip - neww;
@@ -322,22 +328,22 @@ static void _blit_rotate_FR2FR_SF4B_AA(struct _fb_rect* RTGUI_RESTRICT src,
                                        struct _fb_rect* RTGUI_RESTRICT dst,
                                        struct rtgui_matrix *invm)
 {
-    int nx, ny;
     rt_uint32_t* RTGUI_RESTRICT srcp = (rt_uint32_t*)src->fb;
     rt_uint32_t* RTGUI_RESTRICT dstp = (rt_uint32_t*)dst->fb;
     int neww = dst->width;
     int newh = dst->height;
     int oriw = src->width;
     int orih = src->height;
+    int nx, ny;
+    int dx, dy;
+
+    dx = invm->m[0];
+    dy = invm->m[1];
 
     for (ny = dc_point->y; ny < newh; ny++)
     {
         /* Base x, y. */
         int bx, by;
-        int dx, dy;
-
-        dx = invm->m[0];
-        dy = invm->m[1];
 
         bx = dc_point->x * dx + ny * invm->m[2] + 1024 * invm->m[4];
         by = dc_point->x * dy + ny * invm->m[3] + 1024 * invm->m[5];
@@ -417,22 +423,22 @@ static void _blit_rotate_FR2FR_ARGB2RGB565(struct _fb_rect* RTGUI_RESTRICT src,
                                            struct _fb_rect* RTGUI_RESTRICT dst,
                                            struct rtgui_matrix *invm)
 {
-    int nx, ny;
     rt_uint32_t* RTGUI_RESTRICT srcp = (rt_uint32_t*)src->fb;
     rt_uint16_t* RTGUI_RESTRICT dstp = (rt_uint16_t*)dst->fb;
     int neww = dst->width;
     int newh = dst->height;
     int oriw = src->width;
     int orih = src->height;
+    int nx, ny;
+    int dx, dy;
+
+    dx = invm->m[0];
+    dy = invm->m[1];
 
     for (ny = dc_point->y; ny < newh; ny++)
     {
         /* Base x, y. */
         int bx, by;
-        int dx, dy;
-
-        dx = invm->m[0];
-        dy = invm->m[1];
 
         bx = dc_point->x * dx + ny * invm->m[2] + 1024 * invm->m[4];
         by = dc_point->x * dy + ny * invm->m[3] + 1024 * invm->m[5];
@@ -488,22 +494,22 @@ static void _blit_rotate_FR2FR_ARGB2RGB565_AA(struct _fb_rect* RTGUI_RESTRICT sr
                                               struct _fb_rect* RTGUI_RESTRICT dst,
                                               struct rtgui_matrix *invm)
 {
-    int nx, ny;
     rt_uint32_t* RTGUI_RESTRICT srcp = (rt_uint32_t*)src->fb;
     rt_uint16_t* RTGUI_RESTRICT dstp = (rt_uint16_t*)dst->fb;
     int neww = dst->width;
     int newh = dst->height;
     int oriw = src->width;
     int orih = src->height;
+    int nx, ny;
+    int dx, dy;
+
+    dx = invm->m[0];
+    dy = invm->m[1];
 
     for (ny = dc_point->y; ny < newh; ny++)
     {
         /* Base x, y. */
         int bx, by;
-        int dx, dy;
-
-        dx = invm->m[0];
-        dy = invm->m[1];
 
         bx = dc_point->x * dx + ny * invm->m[2] + 1024 * invm->m[4];
         by = dc_point->x * dy + ny * invm->m[3] + 1024 * invm->m[5];
