@@ -132,7 +132,7 @@ struct _fb_rect
 
 /* FrameRect to FrameRect, same format, 2 Bytes/pixel. */
 static void _blit_rotate_FR2FR_SF2B(struct _fb_rect* RTGUI_RESTRICT src,
-                                    struct rtgui_point *dc_point,
+                                    const struct rtgui_point *dc_point,
                                     struct _fb_rect* RTGUI_RESTRICT dst,
                                     const struct rtgui_matrix *invm)
 {
@@ -180,9 +180,9 @@ static void _blit_rotate_FR2FR_SF2B(struct _fb_rect* RTGUI_RESTRICT src,
 
 /* FrameRect to FrameRect, same format, 2 Bytes/pixel, with AA. */
 static void _blit_rotate_FR2FR_SF2B_AA(struct _fb_rect* RTGUI_RESTRICT src,
-                                       struct rtgui_point *dc_point,
+                                       const struct rtgui_point *dc_point,
                                        struct _fb_rect* RTGUI_RESTRICT dst,
-                                       struct rtgui_matrix *invm)
+                                       const struct rtgui_matrix *invm)
 {
     rt_uint16_t* RTGUI_RESTRICT srcp = (rt_uint16_t*)src->fb;
     rt_uint16_t* RTGUI_RESTRICT dstp = (rt_uint16_t*)dst->fb;
@@ -261,9 +261,9 @@ union _rgba
 
 /* FrameRect to FrameRect, same format, 4 Bytes/pixel. */
 static void _blit_rotate_FR2FR_SF4B(struct _fb_rect* RTGUI_RESTRICT src,
-                                    struct rtgui_point *dc_point,
+                                    const struct rtgui_point *dc_point,
                                     struct _fb_rect* RTGUI_RESTRICT dst,
-                                    struct rtgui_matrix *invm)
+                                    const struct rtgui_matrix *invm)
 {
     rt_uint32_t* RTGUI_RESTRICT srcp = (rt_uint32_t*)src->fb;
     rt_uint32_t* RTGUI_RESTRICT dstp = (rt_uint32_t*)dst->fb;
@@ -324,9 +324,9 @@ static void _blit_rotate_FR2FR_SF4B(struct _fb_rect* RTGUI_RESTRICT src,
 
 /* FrameRect to FrameRect, same format, 4 Bytes/pixel, with AA. */
 static void _blit_rotate_FR2FR_SF4B_AA(struct _fb_rect* RTGUI_RESTRICT src,
-                                       struct rtgui_point *dc_point,
+                                       const struct rtgui_point *dc_point,
                                        struct _fb_rect* RTGUI_RESTRICT dst,
-                                       struct rtgui_matrix *invm)
+                                       const struct rtgui_matrix *invm)
 {
     rt_uint32_t* RTGUI_RESTRICT srcp = (rt_uint32_t*)src->fb;
     rt_uint32_t* RTGUI_RESTRICT dstp = (rt_uint32_t*)dst->fb;
@@ -419,9 +419,9 @@ static void _blit_rotate_FR2FR_SF4B_AA(struct _fb_rect* RTGUI_RESTRICT src,
 
 /* FrameRect to FrameRect, from ARGB8888 to RGB565. */
 static void _blit_rotate_FR2FR_ARGB2RGB565(struct _fb_rect* RTGUI_RESTRICT src,
-                                           struct rtgui_point *dc_point,
+                                           const struct rtgui_point *dc_point,
                                            struct _fb_rect* RTGUI_RESTRICT dst,
-                                           struct rtgui_matrix *invm)
+                                           const struct rtgui_matrix *invm)
 {
     rt_uint32_t* RTGUI_RESTRICT srcp = (rt_uint32_t*)src->fb;
     rt_uint16_t* RTGUI_RESTRICT dstp = (rt_uint16_t*)dst->fb;
@@ -490,9 +490,9 @@ static void _blit_rotate_FR2FR_ARGB2RGB565(struct _fb_rect* RTGUI_RESTRICT src,
 
 /* FrameRect to FrameRect, from ARGB8888 to RGB565. */
 static void _blit_rotate_FR2FR_ARGB2RGB565_AA(struct _fb_rect* RTGUI_RESTRICT src,
-                                              struct rtgui_point *dc_point,
+                                              const struct rtgui_point *dc_point,
                                               struct _fb_rect* RTGUI_RESTRICT dst,
-                                              struct rtgui_matrix *invm)
+                                              const struct rtgui_matrix *invm)
 {
     rt_uint32_t* RTGUI_RESTRICT srcp = (rt_uint32_t*)src->fb;
     rt_uint16_t* RTGUI_RESTRICT dstp = (rt_uint16_t*)dst->fb;
@@ -588,10 +588,10 @@ static void _blit_rotate_FR2FR_ARGB2RGB565_AA(struct _fb_rect* RTGUI_RESTRICT sr
 }
 
 static void _blit_rotate_B2B(struct rtgui_dc_trans *dct,
-                             struct rtgui_point *dc_point,
+                             const struct rtgui_point *dc_point,
                              struct rtgui_dc_buffer* RTGUI_RESTRICT dest,
                              struct rtgui_rect *rect,
-                             struct rtgui_matrix *invm,
+                             const struct rtgui_matrix *invm,
                              int neww, int newh)
 {
     struct rtgui_rect srcrect;
@@ -653,10 +653,10 @@ static void _blit_rotate_B2B(struct rtgui_dc_trans *dct,
 }
 
 static void _blit_rotate_B2H(struct rtgui_dc_trans *dct,
-                             struct rtgui_point *dc_point,
+                             const struct rtgui_point *dc_point,
                              struct rtgui_dc_hw* dest,
                              struct rtgui_rect *rect,
-                             struct rtgui_matrix *invm,
+                             const struct rtgui_matrix *invm,
                              int neww, int newh)
 {
     struct rtgui_rect srcrect;
