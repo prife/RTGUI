@@ -731,13 +731,17 @@ void rtgui_dc_trans_blit(struct rtgui_dc_trans *dct,
 {
     struct rtgui_rect bkrect;
     struct rtgui_matrix invm;
+    struct rtgui_point dp;
     int neww, newh;
 
     RT_ASSERT(dct);
     RT_ASSERT(dest);
 
     if (dc_point == RT_NULL)
-        dc_point = &rtgui_empty_point;
+    {
+        dp.x = dp.y = 0;
+        dc_point = &dp;
+    }
     if (rect == RT_NULL)
     {
         rtgui_dc_get_rect(dest, &bkrect);
