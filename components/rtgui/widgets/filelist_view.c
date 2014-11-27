@@ -225,7 +225,7 @@ const static char *folder_xpm[] =
 
 /* image for file and folder */
 static rtgui_image_t *file_image, *folder_image;
-static struct rtgui_listbox_item _folder_actions[] =
+static const struct rtgui_listbox_item _folder_actions[] =
 {
 #ifdef RTGUI_USING_FONTHZ
     {"打开文件夹", RT_NULL},
