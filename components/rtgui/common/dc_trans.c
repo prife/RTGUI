@@ -165,10 +165,13 @@ static void _blit_rotate_FR2FR_SF2B(struct _fb_rect* RTGUI_RESTRICT src,
             bx += dx;
             by += dy;
 
+            if (bx < 0 || by < 0)
+                continue;
+
             rx = bx / 1024;
             ry = by / 1024;
 
-            if (oriw <= rx || rx < 0 || orih <= ry || ry < 0)
+            if (oriw <= rx || orih <= ry)
                 continue;
 
             /* We take the source as a whole and ignore the src->skip. */
@@ -215,10 +218,13 @@ static void _blit_rotate_FR2FR_SF2B_AA(struct _fb_rect* RTGUI_RESTRICT src,
             bx += dx;
             by += dy;
 
+            if (bx < 0 || by < 0)
+                continue;
+
             rx = bx / 1024;
             ry = by / 1024;
 
-            if (oriw - 1 <= rx || rx < 0 || orih - 1 <= ry || ry < 0)
+            if (oriw - 1 <= rx || orih - 1 <= ry)
                 continue;
 
             c00 = srcp[ry * oriw + rx];
@@ -293,10 +299,13 @@ static void _blit_rotate_FR2FR_SF4B(struct _fb_rect* RTGUI_RESTRICT src,
             bx += dx;
             by += dy;
 
+            if (bx < 0 || by < 0)
+                continue;
+
             rx = bx / 1024;
             ry = by / 1024;
 
-            if (oriw <= rx || rx < 0 || orih <= ry || ry < 0)
+            if (oriw <= rx || orih <= ry)
                 continue;
 
             spix.blk = srcp[ry * oriw + rx];
@@ -356,10 +365,13 @@ static void _blit_rotate_FR2FR_SF4B_AA(struct _fb_rect* RTGUI_RESTRICT src,
             bx += dx;
             by += dy;
 
+            if (bx < 0 || by < 0)
+                continue;
+
             rx = bx / 1024;
             ry = by / 1024;
 
-            if (oriw - 1 <= rx || rx < 0 || orih - 1 <= ry || ry < 0)
+            if (oriw - 1 <= rx || orih - 1 <= ry)
                 continue;
 
             spix00.blk = srcp[ry * oriw + rx];
@@ -458,10 +470,13 @@ static void _blit_rotate_FR2FR_ARGB2RGB565(struct _fb_rect* RTGUI_RESTRICT src,
             bx += dx;
             by += dy;
 
+            if (bx < 0 || by < 0)
+                continue;
+
             rx = bx / 1024;
             ry = by / 1024;
 
-            if (oriw <= rx || rx < 0 || orih <= ry || ry < 0)
+            if (oriw <= rx || orih <= ry)
                 continue;
 
             /* We take the source as a whole and ignore the src->skip. */
@@ -529,10 +544,13 @@ static void _blit_rotate_FR2FR_ARGB2RGB565_AA(struct _fb_rect* RTGUI_RESTRICT sr
             bx += dx;
             by += dy;
 
+            if (bx < 0 || by < 0)
+                continue;
+
             rx = bx / 1024;
             ry = by / 1024;
 
-            if (oriw - 1 <= rx || rx < 0 || orih - 1 <= ry || ry < 0)
+            if (oriw - 1 < rx || orih - 1 < ry)
                 continue;
 
             op00 = srcp[ry * oriw + rx];
