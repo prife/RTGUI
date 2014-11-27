@@ -44,6 +44,9 @@ struct rtgui_matrix
      *
      * p * m
      *
+     * Note: m[0-3] is in fix presentation that has 10 bits decimal
+     * fraction(m/1024). While the unit of m[4-5] is pixel.
+     *
      */
 	int m[6];
 };
