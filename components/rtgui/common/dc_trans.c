@@ -373,11 +373,24 @@ static void _blit_rotate_FR2FR_SF4B_AA(struct _fb_rect* RTGUI_RESTRICT src,
             spix11.blk = srcp[(ry + 1) * oriw + rx + 1];
 
             if (sx)
+                spix00.d.a = (spix01.d.a - spix00.d.a) * sx / 32 + spix00.d.a;
+
+            if (sx && sy)
+                spix10.d.a = (spix11.d.a - spix10.d.a) * sx / 32 + spix10.d.a;
+
+            if (sy)
+                spix00.d.a = (spix10.d.a - spix00.d.a) * sy / 32 + spix00.d.a;
+
+            a = spix00.d.a >> 3;
+
+            if (a == 0)
+                continue;
+
+            if (sx)
             {
                 spix00.d.r = (spix01.d.r - spix00.d.r) * sx / 32 + spix00.d.r;
                 spix00.d.g = (spix01.d.g - spix00.d.g) * sx / 32 + spix00.d.g;
                 spix00.d.b = (spix01.d.b - spix00.d.b) * sx / 32 + spix00.d.b;
-                spix00.d.a = (spix01.d.a - spix00.d.a) * sx / 32 + spix00.d.a;
             }
 
             if (sx && sy)
@@ -385,7 +398,6 @@ static void _blit_rotate_FR2FR_SF4B_AA(struct _fb_rect* RTGUI_RESTRICT src,
                 spix10.d.r = (spix11.d.r - spix10.d.r) * sx / 32 + spix10.d.r;
                 spix10.d.g = (spix11.d.g - spix10.d.g) * sx / 32 + spix10.d.g;
                 spix10.d.b = (spix11.d.b - spix10.d.b) * sx / 32 + spix10.d.b;
-                spix10.d.a = (spix11.d.a - spix10.d.a) * sx / 32 + spix10.d.a;
             }
 
             if (sy)
@@ -393,13 +405,7 @@ static void _blit_rotate_FR2FR_SF4B_AA(struct _fb_rect* RTGUI_RESTRICT src,
                 spix00.d.r = (spix10.d.r - spix00.d.r) * sy / 32 + spix00.d.r;
                 spix00.d.g = (spix10.d.g - spix00.d.g) * sy / 32 + spix00.d.g;
                 spix00.d.b = (spix10.d.b - spix00.d.b) * sy / 32 + spix00.d.b;
-                spix00.d.a = (spix10.d.a - spix00.d.a) * sy / 32 + spix00.d.a;
             }
-
-            a = spix00.d.a >> 3;
-
-            if (a == 0)
-                continue;
 
             if (a == (255 >> 3))
             {
@@ -460,8 +466,8 @@ static void _blit_rotate_FR2FR_ARGB2RGB565(struct _fb_rect* RTGUI_RESTRICT src,
 
             /* We take the source as a whole and ignore the src->skip. */
             op = srcp[ry * oriw + rx];
-            alpha = op >> 27;
             /* downscale alpha to 5 bits */
+            alpha = op >> 27;
             if (alpha == (255 >> 3))
             {
                 *dstp = (rt_uint16_t)((op >> 8 & 0xf800) +
@@ -479,7 +485,7 @@ static void _blit_rotate_FR2FR_ARGB2RGB565(struct _fb_rect* RTGUI_RESTRICT src,
                 op = ((op & 0xfc00) << 11) + (op >> 8 & 0xf800)
                     + (op >> 3 & 0x1f);
                 d = (d | d << 16) & 0x07e0f81f;
-                d += (op - d) * (op >> 27) >> 5;
+                d += (op - d) * alpha >> 5;
                 d &= 0x07e0f81f;
                 *dstp = (rt_uint16_t)(d | d >> 16);
             }
@@ -543,16 +549,19 @@ static void _blit_rotate_FR2FR_ARGB2RGB565_AA(struct _fb_rect* RTGUI_RESTRICT sr
             a11 = op11 >> 27;
             a10 = op10 >> 27;
 
-            a00 = (a01 - a00) * sx / 32 + a00;
-            a10 = (a11 - a10) * sx / 32 + a10;
-            a00 = (a10 - a00) * sy / 32 + a00;
+            if (sx)
+                a00 = (a01 - a00) * sx / 32 + a00;
+            if (sx && sy)
+                a10 = (a11 - a10) * sx / 32 + a10;
+            if (sy)
+                a00 = (a10 - a00) * sy / 32 + a00;
             if (a00 == 0)
                 continue;
 
-            op00 = (((op00 >> 10) & 0x3f) << 21) + (((op00 >> 19) & 0x1f) << 11) + (op00 >> 3 & 0x1f);
-            op10 = (((op10 >> 10) & 0x3f) << 21) + (((op10 >> 19) & 0x1f) << 11) + (op10 >> 3 & 0x1f);
-            op01 = (((op01 >> 10) & 0x3f) << 21) + (((op01 >> 19) & 0x1f) << 11) + (op01 >> 3 & 0x1f);
-            op11 = (((op11 >> 10) & 0x3f) << 21) + (((op11 >> 19) & 0x1f) << 11) + (op11 >> 3 & 0x1f);
+            op00 = (((op00 >> 10) & 0x3f) << 21) | (((op00 >> 19) & 0x1f) << 11) | (op00 >> 3 & 0x1f);
+            op10 = (((op10 >> 10) & 0x3f) << 21) | (((op10 >> 19) & 0x1f) << 11) | (op10 >> 3 & 0x1f);
+            op01 = (((op01 >> 10) & 0x3f) << 21) | (((op01 >> 19) & 0x1f) << 11) | (op01 >> 3 & 0x1f);
+            op11 = (((op11 >> 10) & 0x3f) << 21) | (((op11 >> 19) & 0x1f) << 11) | (op11 >> 3 & 0x1f);
 
             if (sx)
             {
