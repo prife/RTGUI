@@ -550,7 +550,7 @@ static void _blit_rotate_FR2FR_ARGB2RGB565_AA(struct _fb_rect* RTGUI_RESTRICT sr
             rx = bx / 1024;
             ry = by / 1024;
 
-            if (oriw - 1 < rx || orih - 1 < ry)
+            if (oriw - 1 <= rx || orih - 1 <= ry)
                 continue;
 
             op00 = srcp[ry * oriw + rx];
