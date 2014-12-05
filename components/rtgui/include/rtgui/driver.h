@@ -73,6 +73,7 @@ void rtgui_graphic_driver_screen_update(const struct rtgui_graphic_driver *drive
 rt_uint8_t *rtgui_graphic_driver_get_framebuffer(const struct rtgui_graphic_driver *driver);
 
 rt_err_t rtgui_graphic_set_device(rt_device_t device);
+void rtgui_graphic_driver_set_framebuffer(void *fb);
 
 rt_inline struct rtgui_graphic_driver *rtgui_graphic_get_device()
 {

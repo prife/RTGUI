@@ -216,6 +216,14 @@ void rtgui_graphic_driver_screen_update(const struct rtgui_graphic_driver *drive
 }
 RTM_EXPORT(rtgui_graphic_driver_screen_update);
 
+void rtgui_graphic_driver_set_framebuffer(void *fb)
+{
+    if (_current_driver)
+        _current_driver->framebuffer = fb;
+    else
+        _driver.framebuffer = fb;
+}
+
 /* get video frame buffer */
 rt_uint8_t *rtgui_graphic_driver_get_framebuffer(const struct rtgui_graphic_driver *driver)
 {
