@@ -39,7 +39,7 @@
 
 #define RTGUI_FILELIST_MARGIN       5
 
-const static char *file_xpm[] =
+const static char * const file_xpm[] =
 {
     "16 16 21 1",
     " 	c None",
@@ -81,7 +81,7 @@ const static char *file_xpm[] =
     "                "
 };
 
-const static char *folder_xpm[] =
+const static char * const folder_xpm[] =
 {
     "16 16 121 2",
     "  	c None",

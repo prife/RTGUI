@@ -91,7 +91,7 @@ int rtgui_matrix_inverse(const struct rtgui_matrix *mm, struct rtgui_matrix *mo)
 /* @dd is the degree range in 0~256 */
 rt_inline int icost(int dd)
 {
-	static int t[256] = {
+	static const int t[256] = {
 		1024,1023,1022,1021,1019,1016,1012,1008,1004,999,993,986,979,972,964,955,
 		946,936,925,914,903,890,878,865,851,837,822,807,791,775,758,741,
 		724,706,687,668,649,629,609,589,568,547,526,504,482,460,437,414,
