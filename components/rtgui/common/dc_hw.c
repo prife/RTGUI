@@ -190,6 +190,7 @@ static void rtgui_dc_hw_fill_rect(struct rtgui_dc *self, struct rtgui_rect *rect
     struct rtgui_dc_hw *dc;
 
     RT_ASSERT(self != RT_NULL);
+    RT_ASSERT(rect);
     dc = (struct rtgui_dc_hw *) self;
 
     /* get background color */

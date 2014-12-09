@@ -249,7 +249,9 @@ static void rtgui_dc_client_fill_rect(struct rtgui_dc *self, struct rtgui_rect *
     register rt_base_t index;
     rtgui_widget_t *owner;
 
-    if (self == RT_NULL) return;
+    RT_ASSERT(self);
+    RT_ASSERT(rect);
+
 	if (!rtgui_dc_get_visible(self)) return;
 
     /* get owner */
