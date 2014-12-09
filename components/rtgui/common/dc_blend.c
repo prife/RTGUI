@@ -78,6 +78,11 @@
 
 #include <math.h>
 
+#ifdef __CC_ARM
+/* Keil define `abs` in stdlib... */
+#include <stdlib.h>
+#endif
+
 #define hw_driver               (rtgui_graphic_driver_get_default())
 #define _int_swap(x, y)         do {x ^= y; y ^= x; x ^= y;} while (0)
 
@@ -90,7 +95,7 @@ rt_inline rt_uint8_t _dc_get_bits_per_pixel(struct rtgui_dc* dc)
 	else if (dc->type == RTGUI_DC_BUFFER)
 	{
 		struct rtgui_dc_buffer *buffer = (struct rtgui_dc_buffer*)dc;
-		
+
 		bits_per_pixel = rtgui_color_get_bits(buffer->pixel_format);
 	}
 
@@ -168,8 +173,9 @@ static int ComputeOutCode(const rtgui_rect_t * rect, int x, int y)
 	return code;
 }
 
-static rt_bool_t _intersect_rect_line(const rtgui_rect_t* rect, int *X1, int *Y1, int *X2,
-                         int *Y2)
+static rt_bool_t _intersect_rect_line(const rtgui_rect_t* rect,
+                                      int *X1, int *Y1,
+                                      int *X2, int *Y2)
 {
     int x = 0;
     int y = 0;
@@ -321,7 +327,7 @@ _dc_draw_line2(struct rtgui_dc * dst, int x1, int y1, int x2, int y2, rtgui_colo
 
 	if (rtgui_dc_get_pixel_format(dst) == RTGRAPHIC_PIXEL_FORMAT_RGB565)
 		color = rtgui_color_to_565(c);
-	else 
+	else
 		color = rtgui_color_to_565p(c);
 
     if (y1 == y2) {
@@ -337,7 +343,7 @@ _dc_draw_line2(struct rtgui_dc * dst, int x1, int y1, int x2, int y2, rtgui_colo
 		_g = RTGUI_RGB_G(c);
 		_b = RTGUI_RGB_B(c);
 		_a = RTGUI_RGB_A(c);
-		
+
 		if (rtgui_dc_get_pixel_format(dst) == RTGRAPHIC_PIXEL_FORMAT_RGB565)
 		{
             AALINE(x1, y1, x2, y2,
@@ -404,21 +410,15 @@ _dc_calc_draw_line_func(int bpp)
 	return NULL;
 }
 
-void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2)
+static void _do_draw_line(struct rtgui_dc * dst,
+                          rtgui_color_t color,
+                          int x1, int y1,
+                          int x2, int y2,
+                          rt_bool_t draw_end)
 {
 	int bpp;
     DrawLineFunc func;
-	rtgui_color_t color;
-	rtgui_widget_t *owner;
 
-	RT_ASSERT(dst != RT_NULL);
-	if (!rtgui_dc_get_visible(dst))
-        return;
-	/* we do not support pixel DC */
-	if (_dc_get_pixel(dst, 0, 0) == RT_NULL)
-        return;
-
-	color = rtgui_dc_get_gc(dst)->foreground;
 	bpp = _dc_get_bits_per_pixel(dst);
     if (bpp < 8)
         return;
@@ -433,6 +433,8 @@ void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2
 	/* perform clip */
 	if (dst->type == RTGUI_DC_CLIENT)
 	{
+        rtgui_widget_t *owner;
+
 		/* get owner */
 		owner = RTGUI_CONTAINER_OF(dst, struct rtgui_widget, dc_type);
 
@@ -449,10 +451,11 @@ void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2
 			prect = &(owner->clip.extents);
 
 			/* calculate line intersect */
-			if (_intersect_rect_line(prect, &x1, &y1, &x2, &y2) == RT_FALSE) return ;
+			if (_intersect_rect_line(prect, &x1, &y1, &x2, &y2) == RT_FALSE)
+                return;
 
 			/* draw line */
-			func(dst, x1, y1, x2, y2, color, RT_FALSE);
+			func(dst, x1, y1, x2, y2, color, draw_end);
 		}
 		else
 		{
@@ -469,28 +472,64 @@ void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2
 		        draw_y1 = y1; draw_y2 = y2;
 
 				/* calculate line intersect */
-				if (_intersect_rect_line(prect, &draw_x1, &draw_y1, &draw_x2, &draw_y2) == RT_FALSE) continue;
+				if (_intersect_rect_line(prect, &draw_x1, &draw_y1, &draw_x2, &draw_y2) == RT_FALSE)
+                    continue;
 
 		        /* draw line */
-				func(dst, draw_x1, draw_y1, draw_x2, draw_y2, color, RT_FALSE);
+				func(dst, draw_x1, draw_y1, draw_x2, draw_y2, color, draw_end);
 		    }
 		}
 	}
 	else
 	{
-		if (dst->type == RTGUI_DC_HW)
-		{
-			struct rtgui_dc_hw *dc_hw = (struct rtgui_dc_hw*)dst;
+        if (dst->type == RTGUI_DC_HW)
+        {
+            rtgui_widget_t *owner;
+            rtgui_rect_t *prect;
+            /* no clip */
+            struct rtgui_dc_hw *dc_hw = (struct rtgui_dc_hw*)dst;
 
-			owner = dc_hw->owner;
-			x1 = x1 + owner->extent.x1;
-			x2 = x2 + owner->extent.x1;
-			y1 = y1 + owner->extent.y1;
-			y2 = y2 + owner->extent.y1;
-		}
+            owner = dc_hw->owner;
 
-		func(dst, x1, y1, x2, y2, color, RT_FALSE);
+            x1 = x1 + owner->extent.x1;
+            x2 = x2 + owner->extent.x1;
+            y1 = y1 + owner->extent.y1;
+            y2 = y2 + owner->extent.y1;
+
+            prect = &(owner->clip.extents);
+            if (_intersect_rect_line(prect, &x1, &y1, &x2, &y2) == RT_FALSE)
+                return;
+        }
+        else if (dst->type == RTGUI_DC_BUFFER)
+        {
+            rtgui_rect_t rect;
+            struct rtgui_dc_buffer *pbf = (struct rtgui_dc_buffer *)dst;
+
+            rect.x1 = rect.y1 = 0;
+            rect.x2 = pbf->width;
+            rect.y2 = pbf->height;
+            if (_intersect_rect_line(&rect, &x1, &y1, &x2, &y2) == RT_FALSE)
+                return;
+        }
+
+		func(dst, x1, y1, x2, y2, color, draw_end);
 	}
+}
+
+void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2)
+{
+	rtgui_color_t color;
+
+	RT_ASSERT(dst != RT_NULL);
+	if (!rtgui_dc_get_visible(dst))
+        return;
+	/* we do not support pixel DC */
+	if (_dc_get_pixel(dst, 0, 0) == RT_NULL)
+        return;
+
+	color = rtgui_dc_get_gc(dst)->foreground;
+
+    _do_draw_line(dst, color, x1, y1, x2, y2, RT_FALSE);
 }
 
 void rtgui_dc_draw_aa_lines(struct rtgui_dc * dst, const struct rtgui_point * points, int count)
@@ -498,40 +537,21 @@ void rtgui_dc_draw_aa_lines(struct rtgui_dc * dst, const struct rtgui_point * po
     int i;
     int x1, y1;
     int x2, y2;
-    rt_bool_t draw_end;
-    DrawLineFunc func;
-	int bpp;
 	rtgui_color_t color;
-	rtgui_widget_t *owner = RT_NULL;
 
 	RT_ASSERT(dst);
-	if (!rtgui_dc_get_visible(dst)) return;
+	if (!rtgui_dc_get_visible(dst))
+        return;
 	/* we do not support pixel DC */
-	if (_dc_get_pixel(dst, 0, 0) == RT_NULL) return ; 
+	if (_dc_get_pixel(dst, 0, 0) == RT_NULL)
+        return;
 
 	color = rtgui_dc_get_gc(dst)->foreground;
-	bpp = _dc_get_bits_per_pixel(dst); if (bpp < 8) return;
 
-    func = _dc_calc_draw_line_func(bpp/8);
-    if (!func) {
-        rt_kprintf("dc_draw_lines(): Unsupported pixel format\n");
-		return;
-    }
+    for (i = 1; i < count; ++i)
+    {
+        rt_bool_t draw_end;
 
-	/* perform cliping */
-	if (dst->type == RTGUI_DC_CLIENT)
-	{
-		/* get owner */
-		owner = RTGUI_CONTAINER_OF(dst, struct rtgui_widget, dc_type);
-	}
-	else if (dst->type == RTGUI_DC_HW)
-	{
-		struct rtgui_dc_hw* dc_hw = (struct rtgui_dc_hw*)dst;
-
-		owner = dc_hw->owner;
-	}
-	
-    for (i = 1; i < count; ++i) {
         x1 = points[i-1].x;
         y1 = points[i-1].y;
         x2 = points[i].x;
@@ -539,67 +559,10 @@ void rtgui_dc_draw_aa_lines(struct rtgui_dc * dst, const struct rtgui_point * po
 
         /* Draw the end if it was clipped */
         draw_end = (x2 != points[i].x || y2 != points[i].y);
-
-		if (dst->type == RTGUI_DC_CLIENT)
-		{
-			x1 = x1 + owner->extent.x1;
-			x2 = x2 + owner->extent.x1;
-			y1 = y1 + owner->extent.y1;
-			y2 = y2 + owner->extent.y1;
-			if (y1 > y2) _int_swap(y1, y2);
-			if (x1 > x2) _int_swap(x1, x2);
-
-			if (owner->clip.data == RT_NULL)
-			{
-				rtgui_rect_t *prect;
-		
-				/* no clip */
-				prect = &(owner->clip.extents);
-			
-				/* calculate line intersect */
-				if (_intersect_rect_line(prect, &x1, &y1, &x2, &y2) == RT_FALSE) return;
-		
-				/* draw line */
-				func(dst, x1, y1, x2, y2, color, draw_end);
-			}
-			else
-			{
-				register rt_base_t index;
-		
-				for (index = 0; index < rtgui_region_num_rects(&(owner->clip)); index ++)
-				{
-					rtgui_rect_t *prect;
-					int draw_x1, draw_x2;
-					int draw_y1, draw_y2;
-		
-					prect = ((rtgui_rect_t *)(owner->clip.data + index + 1));
-					draw_x1 = x1; draw_x2 = x2;
-					draw_y1 = y1; draw_y2 = y2;
-		
-					/* calculate line intersect */
-					if (_intersect_rect_line(prect, &draw_x1, &draw_y1, &draw_x2, &draw_y2) == RT_FALSE) continue;
-
-					/* draw line */
-					func(dst, draw_x1, draw_y1, draw_x2, draw_y2, color, draw_end);
-				}
-			}
-		}
-		else
-		{
-			if (dst->type == RTGUI_DC_HW)
-			{
-				x1 = x1 + owner->extent.x1;
-				x2 = x2 + owner->extent.x1;
-				y1 = y1 + owner->extent.y1;
-				y2 = y2 + owner->extent.y1;
-				if (y1 > y2) _int_swap(y1, y2);
-				if (x1 > x2) _int_swap(x1, x2);
-			}
-			func(dst, x1, y1, x2, y2, color, draw_end);
-		}
+        _do_draw_line(dst, color, x1, y1, x2, y2, draw_end);
     }
 
-    if (points[0].x != points[count-1].x || points[0].y != points[count-1].y) 
+    if (points[0].x != points[count-1].x || points[0].y != points[count-1].y)
 	{
         rtgui_dc_draw_point(dst, points[count-1].x, points[count-1].y);
     }
@@ -699,7 +662,7 @@ _dc_blend_point_argb8888(struct rtgui_dc * dst, int x, int y, enum RTGUI_BLENDMO
     return 0;
 }
 
-void 
+void
 rtgui_dc_blend_point(struct rtgui_dc * dst, int x, int y, enum RTGUI_BLENDMODE blendMode, rt_uint8_t r,
                rt_uint8_t g, rt_uint8_t b, rt_uint8_t a)
 {
@@ -762,7 +725,7 @@ rtgui_dc_blend_point(struct rtgui_dc * dst, int x, int y, enum RTGUI_BLENDMODE b
     }
 }
 
-void 
+void
 rtgui_dc_blend_points(struct rtgui_dc *dst, const rtgui_point_t *points, int count,
                 enum RTGUI_BLENDMODE blendMode, rt_uint8_t r, rt_uint8_t g, rt_uint8_t b, rt_uint8_t a)
 {
@@ -1238,98 +1201,113 @@ _dc_calc_blend_line_func(rt_uint8_t pixel_format)
     return NULL;
 }
 
-void 
-rtgui_dc_blend_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2,
-              enum RTGUI_BLENDMODE blendMode, rtgui_color_t color)
+static void _do_blend_line(struct rtgui_dc * dst,
+                           rtgui_color_t color,
+                           int x1, int y1,
+                           int x2, int y2,
+                           enum RTGUI_BLENDMODE blendMode,
+                           rt_bool_t draw_end)
 {
     BlendLineFunc func;
-	rt_uint8_t pixel_format = 0xff;
+	rt_uint8_t pixel_format;
 	rt_uint8_t r, g, b, a;
 	rtgui_widget_t *owner;
 
-	RT_ASSERT(dst != RT_NULL);
-	if (!rtgui_dc_get_visible(dst)) return;
-	/* we do not support pixel DC */
-	if (_dc_get_pixel(dst, 0, 0) == RT_NULL) return; 
-
-	pixel_format = rtgui_dc_get_pixel_format(dst);
-    func = _dc_calc_blend_line_func(pixel_format);	
-    if (!func) 
-	{
+    pixel_format = rtgui_dc_get_pixel_format(dst);
+    func = _dc_calc_blend_line_func(pixel_format);
+    if (!func)
+    {
         rt_kprintf("dc_blend_line(): Unsupported pixel format\n");
-		return;
+        return;
     }
 
-	r = RTGUI_RGB_R(color);
-	g = RTGUI_RGB_G(color);
-	b = RTGUI_RGB_B(color);
-	a = RTGUI_RGB_A(color);
+    r = RTGUI_RGB_R(color);
+    g = RTGUI_RGB_G(color);
+    b = RTGUI_RGB_B(color);
+    a = RTGUI_RGB_A(color);
 
-	/* perform clip */
-	if (dst->type == RTGUI_DC_CLIENT)
-	{
-		/* get owner */
-		owner = RTGUI_CONTAINER_OF(dst, struct rtgui_widget, dc_type);
-		
-		x1 = x1 + owner->extent.x1;
-		x2 = x2 + owner->extent.x1;
-		y1 = y1 + owner->extent.y1;
-		y2 = y2 + owner->extent.y1;
-		if (y1 > y2) _int_swap(y1, y2);
-		if (x1 > x2) _int_swap(x1, x2);
+    /* perform clip */
+    if (dst->type == RTGUI_DC_CLIENT)
+    {
+        /* get owner */
+        owner = RTGUI_CONTAINER_OF(dst, struct rtgui_widget, dc_type);
 
-		if (owner->clip.data == RT_NULL)
-		{
-			rtgui_rect_t *prect;
+        x1 = x1 + owner->extent.x1;
+        x2 = x2 + owner->extent.x1;
+        y1 = y1 + owner->extent.y1;
+        y2 = y2 + owner->extent.y1;
 
-			/* no clip */
-			prect = &(owner->clip.extents);
-		
-			/* calculate line intersect */
-			if (_intersect_rect_line(prect, &x1, &y1, &x2, &y2) == RT_FALSE) return ;
+        if (owner->clip.data == RT_NULL)
+        {
+            rtgui_rect_t *prect;
 
-			/* draw line */
-			func(dst, x1, y1, x2, y2, blendMode, r, g, b, a, RT_TRUE);
-		}
-		else
-		{
-			register rt_base_t index;
+            /* no clip */
+            prect = &(owner->clip.extents);
 
-			for (index = 0; index < rtgui_region_num_rects(&(owner->clip)); index ++)
-	    	{
-		        rtgui_rect_t *prect;
-		        int draw_x1, draw_x2;
-		        int draw_y1, draw_y2;
+            /* calculate line intersect */
+            if (_intersect_rect_line(prect, &x1, &y1, &x2, &y2) == RT_FALSE)
+                return;
 
-		        prect = ((rtgui_rect_t *)(owner->clip.data + index + 1));
-		        draw_x1 = x1; draw_x2 = x2;
-		        draw_y1 = y1; draw_y2 = y2;
+            /* draw line */
+            func(dst, x1, y1, x2, y2, blendMode, r, g, b, a, RT_TRUE);
+        }
+        else
+        {
+            register rt_base_t index;
 
-				/* calculate line intersect */
-				if (_intersect_rect_line(prect, &draw_x1, &draw_y1, &draw_x2, &draw_y2) == RT_FALSE) continue;
+            for (index = 0; index < rtgui_region_num_rects(&(owner->clip)); index ++)
+            {
+                rtgui_rect_t *prect;
+                int draw_x1, draw_x2;
+                int draw_y1, draw_y2;
 
-		        /* draw line */
-				func(dst, draw_x1, draw_y1, draw_x2, draw_y2, blendMode, r, g, b, a, RT_TRUE);
-		    }
-		}
-	}
-	else
-	{
-		if (dst->type == RTGUI_DC_HW)
-		{
-			struct rtgui_dc_hw *dc_hw = (struct rtgui_dc_hw*)dst;
+                prect = ((rtgui_rect_t *)(owner->clip.data + index + 1));
+                draw_x1 = x1; draw_x2 = x2;
+                draw_y1 = y1; draw_y2 = y2;
 
-			owner = dc_hw->owner;
-			x1 = x1 + owner->extent.x1;
-			x2 = x2 + owner->extent.x1;
-			y1 = y1 + owner->extent.y1;
-			y2 = y2 + owner->extent.y1;
-			if (y1 > y2) _int_swap(y1, y2);
-			if (x1 > x2) _int_swap(x1, x2);
-		}
-		
-    	func(dst, x1, y1, x2, y2, blendMode, r, g, b, a, RT_TRUE);
-	}
+                /* calculate line intersect */
+                if (_intersect_rect_line(prect, &draw_x1, &draw_y1, &draw_x2, &draw_y2) == RT_FALSE)
+                    continue;
+
+                /* draw line */
+                func(dst, draw_x1, draw_y1, draw_x2, draw_y2, blendMode, r, g, b, a, RT_TRUE);
+            }
+        }
+    }
+    else
+    {
+        if (dst->type == RTGUI_DC_HW)
+        {
+            rtgui_rect_t *prect;
+            struct rtgui_dc_hw *dc_hw = (struct rtgui_dc_hw*)dst;
+
+            owner = dc_hw->owner;
+            x1 = x1 + owner->extent.x1;
+            x2 = x2 + owner->extent.x1;
+            y1 = y1 + owner->extent.y1;
+            y2 = y2 + owner->extent.y1;
+
+            prect = &(owner->clip.extents);
+            if (_intersect_rect_line(prect, &x1, &y1, &x2, &y2) == RT_FALSE)
+                return;
+        }
+
+        func(dst, x1, y1, x2, y2, blendMode, r, g, b, a, RT_TRUE);
+    }
+}
+
+void
+rtgui_dc_blend_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2,
+                    enum RTGUI_BLENDMODE blendMode, rtgui_color_t color)
+{
+	RT_ASSERT(dst != RT_NULL);
+	if (!rtgui_dc_get_visible(dst))
+        return;
+	/* we do not support pixel DC */
+	if (_dc_get_pixel(dst, 0, 0) == RT_NULL)
+        return;
+
+    _do_blend_line(dst, color, x1, y1, x2, y2, blendMode, RT_FALSE);
 }
 
 void
@@ -1337,46 +1315,19 @@ rtgui_dc_blend_lines(struct rtgui_dc * dst, const rtgui_point_t * points, int co
                enum RTGUI_BLENDMODE blendMode, rtgui_color_t color)
 {
     int i;
-    int x1, y1;
-    int x2, y2;
-    rt_bool_t draw_end;
-    BlendLineFunc func;
-	rt_uint8_t pixel_format = 0xff;
-	rt_uint8_t r, g, b, a;
-	rtgui_widget_t *owner = RT_NULL;
 
 	RT_ASSERT(dst != RT_NULL);
-	if (!rtgui_dc_get_visible(dst)) return;
+	if (!rtgui_dc_get_visible(dst))
+        return;
 	/* we do not support pixel DC */
-	if (_dc_get_pixel(dst, 0, 0) == RT_NULL) return ; 
-
-	pixel_format = rtgui_dc_get_pixel_format(dst);
-    func = _dc_calc_blend_line_func(pixel_format);
-    if (!func) {
-        rt_kprintf("dc_blend_lines(): Unsupported pixel format\n");
-		return ;
-    }
-
-	/* Perform clipping */
-	if (dst->type == RTGUI_DC_CLIENT)
-	{
-		/* get owner */
-		owner = RTGUI_CONTAINER_OF(dst, struct rtgui_widget, dc_type);
-	}
-	else if (dst->type == RTGUI_DC_HW)
-	{
-		struct rtgui_dc_hw* dc_hw = (struct rtgui_dc_hw*)dst;
-
-		owner = dc_hw->owner;
-	}
-	
-	r = RTGUI_RGB_R(color);
-	g = RTGUI_RGB_G(color);
-	b = RTGUI_RGB_B(color);
-	a = RTGUI_RGB_A(color);
+	if (_dc_get_pixel(dst, 0, 0) == RT_NULL)
+        return;
 
     for (i = 1; i < count; ++i)
 	{
+        rt_bool_t draw_end;
+        int x1, y1, x2, y2;
+
         x1 = points[i-1].x;
         y1 = points[i-1].y;
         x2 = points[i].x;
@@ -1384,84 +1335,20 @@ rtgui_dc_blend_lines(struct rtgui_dc * dst, const rtgui_point_t * points, int co
 
 		/* Draw the end if it was clipped */
 		draw_end = (x2 != points[i].x || y2 != points[i].y);
-
-        /* Perform clipping */
-		if (dst->type == RTGUI_DC_CLIENT)
-		{
-			x1 = x1 + owner->extent.x1;
-			x2 = x2 + owner->extent.x1;
-			y1 = y1 + owner->extent.y1;
-			y2 = y2 + owner->extent.y1;
-			if (y1 > y2) _int_swap(y1, y2);
-			if (x1 > x2) _int_swap(x1, x2);
-		
-			if (owner->clip.data == RT_NULL)
-			{
-				rtgui_rect_t *prect;
-		
-				/* no clip */
-				prect = &(owner->clip.extents);
-			
-				/* calculate line intersect */
-				if (prect->x1 > x2	|| prect->x2 <= x1) return ;
-				if (prect->y2 <= y1 || prect->y1 > y2)	return ;
-		
-				if (prect->y1 > y1) y1 = prect->y1;
-				if (prect->y2 < y2) y2 = prect->y2;
-				if (prect->x1 > x1) x1 = prect->x1;
-				if (prect->x2 < x2) x2 = prect->x2;
-						
-				/* draw line */
-				func(dst, x1, y1, x2, y2, blendMode, r, g, b, a, draw_end);
-			}
-			else
-			{
-				register rt_base_t index;
-				
-				for (index = 0; index < rtgui_region_num_rects(&(owner->clip)); index ++)
-				{
-					rtgui_rect_t *prect;
-					register rt_base_t draw_x1, draw_x2;
-					register rt_base_t draw_y1, draw_y2;
-		
-					prect = ((rtgui_rect_t *)(owner->clip.data + index + 1));
-					draw_x1 = x1; draw_x2 = x2;
-					draw_y1 = y1; draw_y2 = y2;
-		
-					/* calculate vline clip */
-					if (prect->x1 > x1	|| prect->x2 <= x1) continue;
-					if (prect->y2 <= y1 || prect->y1 > y2) continue;
-		
-					if (prect->y1 > y1) draw_y1 = prect->y1;
-					if (prect->y2 < y2) draw_y2 = prect->y2;
-					if (prect->x1 > x1) draw_x1 = prect->x1;
-					if (prect->x2 < x2) draw_x2 = prect->x2;
-		
-					/* draw line */
-					func(dst, draw_x1, draw_y1, draw_x2, draw_y2, blendMode, r, g, b, a, draw_end);
-				}
-			}
-		}
-		else
-		{
-			if (dst->type == RTGUI_DC_HW)
-			{
-				x1 = x1 + owner->extent.x1;
-				x2 = x2 + owner->extent.x1;
-				y1 = y1 + owner->extent.y1;
-				y2 = y2 + owner->extent.y1;
-				if (y1 > y2) _int_swap(y1, y2);
-				if (x1 > x2) _int_swap(x1, x2);
-			}
-			
-			func(dst, x1, y1, x2, y2, blendMode, r, g, b, a, draw_end);
-		}
+        _do_blend_line(dst, color, x1, y1, x2, y2, blendMode, draw_end);
     }
 
-    if (points[0].x != points[count-1].x || points[0].y != points[count-1].y) 
+    if (points[0].x != points[count-1].x || points[0].y != points[count-1].y)
 	{
+        rt_uint8_t r, g, b, a;
+
+        r = RTGUI_RGB_R(color);
+        g = RTGUI_RGB_G(color);
+        b = RTGUI_RGB_B(color);
+        a = RTGUI_RGB_A(color);
+
         rtgui_dc_blend_point(dst, points[count-1].x, points[count-1].y,
-                       blendMode, r, g, b, a);
+                             blendMode, r, g, b, a);
     }
 }
 
@@ -1556,7 +1443,7 @@ _dc_blend_fill_rect_argb8888(struct rtgui_dc * dst, const rtgui_rect_t * rect,
 typedef void (*BlendFillFunc)(struct rtgui_dc * dst, const rtgui_rect_t * rect,
 			enum RTGUI_BLENDMODE blendMode, rt_uint8_t r, rt_uint8_t g, rt_uint8_t b, rt_uint8_t a);
 
-void 
+void
 rtgui_dc_blend_fill_rect(struct rtgui_dc* dst, const rtgui_rect_t *rect,
                   enum RTGUI_BLENDMODE blendMode, rtgui_color_t color)
 {
@@ -1583,7 +1470,7 @@ rtgui_dc_blend_fill_rect(struct rtgui_dc* dst, const rtgui_rect_t *rect,
         b = DRAW_MUL(b, a);
     }
 
-    switch (rtgui_dc_get_pixel_format(dst)) 
+    switch (rtgui_dc_get_pixel_format(dst))
 	{
     case RTGRAPHIC_PIXEL_FORMAT_RGB565:
         func = _dc_blend_fill_rect_rgb565;
@@ -1611,7 +1498,7 @@ rtgui_dc_blend_fill_rect(struct rtgui_dc* dst, const rtgui_rect_t *rect,
 	    register rt_base_t index;
 	    rtgui_widget_t *owner;
 		rtgui_rect_t draw_rect;
-	
+
 	    /* get owner */
 	    owner = RTGUI_CONTAINER_OF(dst, struct rtgui_widget, dc_type);
 
@@ -1623,7 +1510,7 @@ rtgui_dc_blend_fill_rect(struct rtgui_dc* dst, const rtgui_rect_t *rect,
 			/* convert logic to device */
 			draw_rect = *rect;
 			rtgui_rect_moveto(&draw_rect,owner->extent.x1, owner->extent.y1);
-			
+
 	        /* calculate rect intersect */
 	        if (prect->y1 > draw_rect.y2  || prect->y2 <= draw_rect.y1) return ;
 	        if (prect->x2 <= draw_rect.x1 || prect->x1 > draw_rect.x2 ) return ;
@@ -1657,7 +1544,7 @@ rtgui_dc_blend_fill_rect(struct rtgui_dc* dst, const rtgui_rect_t *rect,
 	}
 }
 
-void 
+void
 rtgui_dc_blend_fill_rects(struct rtgui_dc * dst, const rtgui_rect_t *rects, int count,
                    enum RTGUI_BLENDMODE blendMode, rtgui_color_t color)
 {
@@ -1687,7 +1574,7 @@ rtgui_dc_blend_fill_rects(struct rtgui_dc * dst, const rtgui_rect_t *rects, int 
         b = DRAW_MUL(b, a);
     }
 
-    switch (rtgui_dc_get_pixel_format(dst)) 
+    switch (rtgui_dc_get_pixel_format(dst))
 	{
     case RTGRAPHIC_PIXEL_FORMAT_RGB565:
         func = _dc_blend_fill_rect_rgb565;
@@ -1709,14 +1596,14 @@ rtgui_dc_blend_fill_rects(struct rtgui_dc * dst, const rtgui_rect_t *rects, int 
         rt_kprintf("dc_blend_fill_rects(): Unsupported pixel format\n");
 		return;
 	}
-	
+
 	if (dst->type == RTGUI_DC_CLIENT)
 	{
 		/* get owner */
 		owner = RTGUI_CONTAINER_OF(dst, struct rtgui_widget, dc_type);
 	}
-	
-    for (i = 0; i < count; ++i) 
+
+    for (i = 0; i < count; ++i)
 	{
 		rect = rects[i];
 
@@ -1733,7 +1620,7 @@ rtgui_dc_blend_fill_rects(struct rtgui_dc * dst, const rtgui_rect_t *rects, int 
 				/* convert logic to device */
 				draw_rect = rect;
 				rtgui_rect_moveto(&draw_rect,owner->extent.x1, owner->extent.y1);
-				
+
 		        /* calculate rect intersect */
 		        if (prect->y1 > draw_rect.y2  || prect->y2 <= draw_rect.y1) return ;
 		        if (prect->x2 <= draw_rect.x1 || prect->x1 > draw_rect.x2 ) return ;
@@ -1764,7 +1651,7 @@ rtgui_dc_blend_fill_rects(struct rtgui_dc * dst, const rtgui_rect_t *rects, int 
 		else
 		{
 			func(dst, &rect, blendMode, r, g, b, a);
-		}		
+		}
     }
 }
 
@@ -1773,15 +1660,15 @@ rtgui_dc_blend_fill_rects(struct rtgui_dc * dst, const rtgui_rect_t *rects, int 
 /* Detect 64bit and use intrinsic version */
 #ifdef _M_X64
 #include <emmintrin.h>
-static __inline long 
-lrint(float f) 
+static __inline long
+lrint(float f)
 {
 	return _mm_cvtss_si32(_mm_load_ss(&f));
 }
 #elif defined(_M_IX86)
 __inline long int
 lrint (double flt)
-{	
+{
 	int intgr;
 	_asm
 	{
@@ -1867,7 +1754,7 @@ void rtgui_dc_draw_aa_ellipse(struct rtgui_dc *dc, rt_int16_t  x, rt_int16_t y, 
 
 	xc2 = 2 * x;
 	yc2 = 2 * y;
- 
+
 	sab = sqrt((double)(a2 + b2));
 	od = (rt_int16_t)lrint(sab*0.01) + 1; /* introduce some overdraw */
 	dxt = (rt_int16_t)lrint((double)a2 / sab) + od;
@@ -1887,14 +1774,14 @@ void rtgui_dc_draw_aa_ellipse(struct rtgui_dc *dc, rt_int16_t  x, rt_int16_t y, 
 	rtgui_dc_blend_point(dc, xp, yc2 - yp, RTGUI_BLENDMODE_NONE, r, g, b, a);
 	rtgui_dc_blend_point(dc, xc2 - xp, yc2 - yp, RTGUI_BLENDMODE_NONE, r, g, b, a);
 
-	for (i = 1; i <= dxt; i++) 
+	for (i = 1; i <= dxt; i++)
 	{
 		xp--;
 		d += t - b2;
 
 		if (d >= 0)
 			ys = yp - 1;
-		else if ((d - s - a2) > 0) 
+		else if ((d - s - a2) > 0)
 		{
 			if ((2 * d - s - a2) >= 0)
 				ys = yp + 1;
@@ -1947,7 +1834,7 @@ void rtgui_dc_draw_aa_ellipse(struct rtgui_dc *dc, rt_int16_t  x, rt_int16_t y, 
 
 	/* Replaces original approximation code dyt = abs(yp - yc); */
 	dyt = (rt_int16_t)lrint((double)b2 / sab ) + od;
-	for (i = 1; i <= dyt; i++) 
+	for (i = 1; i <= dyt; i++)
 	{
 		yp++;
 		d -= s + a2;
@@ -2071,7 +1958,7 @@ int _bresenhamInitialize(_BresenhamIterator *b, rt_int16_t x1, rt_int16_t y1, rt
 			b->s1 = 1;
 		}
 	} else {
-		b->s1 = 0;	
+		b->s1 = 0;
 	}
 
 	/* dy = abs(y2-y1), s2 = sign(y2-y1)    */
@@ -2083,7 +1970,7 @@ int _bresenhamInitialize(_BresenhamIterator *b, rt_int16_t x1, rt_int16_t y1, rt
 			b->s2 = 1;
 		}
 	} else {
-		b->s2 = 0;	
+		b->s2 = 0;
 	}
 
 	if (b->dy > b->dx) {
@@ -2098,7 +1985,7 @@ int _bresenhamInitialize(_BresenhamIterator *b, rt_int16_t x1, rt_int16_t y1, rt
 	b->count = (b->dx<0) ? 0 : (unsigned int)b->dx;
 	b->dy <<= 1;
 	b->error = b->dy - b->dx;
-	b->dx <<= 1;	
+	b->dx <<= 1;
 
 	return(0);
 }
@@ -2114,7 +2001,7 @@ Maybe updates the x and y coordinates of the iterator struct.
 \returns Returns 0 on success, 1 if last point was reached, 2 if moving past end-of-line, -1 on failure.
 */
 int _bresenhamIterate(_BresenhamIterator *b)
-{	
+{
 	if (b==NULL) {
 		return (-1);
 	}
@@ -2140,8 +2027,8 @@ int _bresenhamIterate(_BresenhamIterator *b)
 		b->x += b->s1;
 	}
 
-	b->error += b->dy;	
-	b->count--;		
+	b->error += b->dy;
+	b->count--;
 
 	/* count==0 indicates "end-of-line" */
 	return ((b->count) ? 0 : 1);
@@ -2175,7 +2062,7 @@ void _murphyParaline(_MurphyIterator *m, rt_int16_t x, rt_int16_t y, int d1)
 				}
 			}
 			d1 += m->kv;
-		} else {	
+		} else {
 			x++;
 			if (m->quad4 == 0) {
 				y++;
@@ -2205,13 +2092,13 @@ void _murphyParaline(_MurphyIterator *m, rt_int16_t x, rt_int16_t y, int d1)
 \param ml2y Y coordinate of a point.
 
 */
-void _murphyIteration(_MurphyIterator *m, rt_uint8_t miter, 
-	rt_uint16_t ml1bx, rt_uint16_t ml1by, rt_uint16_t ml2bx, rt_uint16_t ml2by, 
+void _murphyIteration(_MurphyIterator *m, rt_uint8_t miter,
+	rt_uint16_t ml1bx, rt_uint16_t ml1by, rt_uint16_t ml2bx, rt_uint16_t ml2by,
 	rt_uint16_t ml1x, rt_uint16_t ml1y, rt_uint16_t ml2x, rt_uint16_t ml2y)
 {
 	int atemp1, atemp2;
 	int ftmp1, ftmp2;
-	rt_uint16_t m1x, m1y, m2x, m2y;	
+	rt_uint16_t m1x, m1y, m2x, m2y;
 	rt_uint16_t fix, fiy, lax, lay, curx, cury;
 	int px[4], py[4];
 	_BresenhamIterator b;
@@ -2351,7 +2238,7 @@ void _murphyWideline(_MurphyIterator *m, rt_int16_t x1, rt_int16_t y1, rt_int16_
 		x2 = temp;
 		temp = y1;
 		y1 = y2;
-		y2 = temp;		
+		y2 = temp;
 		m->u *= -1;
 		m->v *= -1;
 	}
