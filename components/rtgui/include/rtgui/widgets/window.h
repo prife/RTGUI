@@ -118,7 +118,7 @@ struct rtgui_win
     rt_bool_t (*on_key)(struct rtgui_object *widget, struct rtgui_event *event);
 
     /* reserved user data */
-    rt_uint32_t user_data;
+    void *user_data;
 };
 
 rtgui_win_t *rtgui_win_create(struct rtgui_win *parent_window, const char *title,
