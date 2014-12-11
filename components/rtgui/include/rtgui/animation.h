@@ -98,6 +98,8 @@ struct rtgui_animation* rtgui_anim_create(struct rtgui_widget *parent,
                                           int interval);
 void rtgui_anim_destroy(struct rtgui_animation *anim);
 
+struct rtgui_widget* rtgui_anim_get_owner(struct rtgui_animation *anim);
+
 void rtgui_anim_set_bg_buffer(struct rtgui_animation *anim,
                               struct rtgui_dc *dc);
 struct rtgui_dc* rtgui_anim_get_bg_buffer(struct rtgui_animation *anim);

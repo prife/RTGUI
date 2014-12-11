@@ -136,6 +136,13 @@ void rtgui_anim_destroy(struct rtgui_animation *anim)
     rtgui_free(anim);
 }
 
+struct rtgui_widget* rtgui_anim_get_owner(struct rtgui_animation *anim)
+{
+    RT_ASSERT(anim);
+
+    return anim->parent;
+}
+
 void rtgui_anim_set_fg_buffer(struct rtgui_animation *anim,
                               struct rtgui_dc *dc,
                               int cnt)
