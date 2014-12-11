@@ -820,8 +820,11 @@ void rtgui_dc_trans_blit(struct rtgui_dc_trans *dct,
                 _blit_rotate_B2H(dct, dc_point,
                                  (struct rtgui_dc_hw*)dest,
                                  rect, &invm, neww, newh);
+        else if (dest->type == RTGUI_DC_CLIENT)
+            // TODO:
+            ;
         else
-            rt_kprintf("not implemented yet\n");
+            rt_kprintf("unknown dc for dc_trans\n");
     }
     else
         rt_kprintf("not implemented yet\n");
