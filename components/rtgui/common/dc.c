@@ -1588,6 +1588,8 @@ rt_uint8_t rtgui_dc_get_pixel_format(struct rtgui_dc *dc)
 			pixel_fmt = dc_buffer->pixel_format;
 			break;
 		}
+    default:
+        RT_ASSERT(0);
 	}
 
 	return pixel_fmt;
