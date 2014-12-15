@@ -48,7 +48,7 @@ const struct rtgui_dc_engine dc_hw_engine =
 struct rtgui_dc *rtgui_dc_hw_create(rtgui_widget_t *owner)
 {
     struct rtgui_dc_hw *dc;
- 
+
     /* adjudge owner */
     if (owner == RT_NULL || owner->toplevel == RT_NULL) return RT_NULL;
 
@@ -86,10 +86,10 @@ static void rtgui_dc_hw_draw_point(struct rtgui_dc *self, int x, int y)
         return;
 
     x = x + dc->owner->extent.x1;
-    if (x > dc->owner->extent.x2)
+    if (x >= dc->owner->extent.x2)
         return;
     y = y + dc->owner->extent.y1;
-    if (y > dc->owner->extent.y2)
+    if (y >= dc->owner->extent.y2)
         return;
 
     /* draw this point */
@@ -107,10 +107,10 @@ static void rtgui_dc_hw_draw_color_point(struct rtgui_dc *self, int x, int y, rt
         return;
 
     x = x + dc->owner->extent.x1;
-    if (x > dc->owner->extent.x2)
+    if (x >= dc->owner->extent.x2)
         return;
     y = y + dc->owner->extent.y1;
-    if (y > dc->owner->extent.y2)
+    if (y >= dc->owner->extent.y2)
         return;
 
     /* draw this point */
@@ -130,7 +130,7 @@ static void rtgui_dc_hw_draw_vline(struct rtgui_dc *self, int x, int y1, int y2)
     if (x < 0)
         return;
     x = x + dc->owner->extent.x1;
-    if (x > dc->owner->extent.x2)
+    if (x >= dc->owner->extent.x2)
         return;
     y1 = y1 + dc->owner->extent.y1;
     y2 = y2 + dc->owner->extent.y1;
@@ -163,7 +163,7 @@ static void rtgui_dc_hw_draw_hline(struct rtgui_dc *self, int x1, int x2, int y)
     if (y < 0)
         return;
     y = y + dc->owner->extent.y1;
-    if (y > dc->owner->extent.y2)
+    if (y >= dc->owner->extent.y2)
         return;
 
     /* convert logic to device */
