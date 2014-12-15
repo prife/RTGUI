@@ -310,7 +310,7 @@ static void rtgui_filelist_view_menu_pop(rtgui_widget_t *parent)
     {
         rtgui_listbox_t *listbox;
         /* Pass the pointer to filelist_view via user_data. */
-        menu->user_data = (rt_uint32_t)parent;
+        menu->user_data = parent;
 
         rtgui_win_set_ondeactivate(menu, rtgui_filelist_view_on_menu_deactivate);
 
