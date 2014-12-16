@@ -692,6 +692,9 @@ rt_bool_t rtgui_filelist_view_event_handler(struct rtgui_object *object, struct 
         }
     }
     return RT_FALSE;
+
+    default:
+    break;
     }
 
     /* use view event handler */
