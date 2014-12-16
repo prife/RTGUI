@@ -148,12 +148,10 @@ static void rtgui_image_hdc_unload(struct rtgui_image *image)
     {
         hdc = (struct rtgui_image_hdc *) image->data;
 
-        if (hdc->pixels != RT_NULL) rtgui_free(hdc->pixels);
+        if (hdc->pixels != RT_NULL)
+            rtgui_free(hdc->pixels);
         if (hdc->filerw != RT_NULL)
-        {
             rtgui_filerw_close(hdc->filerw);
-            hdc->filerw = RT_NULL;
-        }
 
         /* release data */
         rtgui_free(hdc);
@@ -169,6 +167,9 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image, struct rtgui_dc *dc,
 
     /* this dc is not visible */
     if (rtgui_dc_get_visible(dc) != RT_TRUE)
+        return;
+
+    if (!image)
         return;
 
     hdc = (struct rtgui_image_hdc *) image->data;

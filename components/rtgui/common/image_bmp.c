@@ -161,8 +161,8 @@ static struct rtgui_image_palette *rtgui_image_bmp_load_palette(
 static rt_bool_t rtgui_image_bmp_load(struct rtgui_image *image, struct rtgui_filerw *file, rt_bool_t load)
 {
     rt_uint8_t scale = 0;
-    rt_uint8_t *wrkBuffer;
-    struct rtgui_image_bmp *bmp;
+    rt_uint8_t *wrkBuffer = RT_NULL;
+    struct rtgui_image_bmp *bmp = RT_NULL;
     rt_uint32_t bmpHeaderSize;
     rt_uint32_t colorsUsed;
 
@@ -467,7 +467,8 @@ static rt_bool_t rtgui_image_bmp_load(struct rtgui_image *image, struct rtgui_fi
     /* Release memory */
     rtgui_free(wrkBuffer);
     rtgui_free(image->palette);
-    rtgui_free(bmp->pixels);
+    if (bmp)
+        rtgui_free(bmp->pixels);
     rtgui_free(bmp);
     return RT_FALSE;
 }
@@ -747,10 +748,10 @@ static void rtgui_image_bmp_blit(struct rtgui_image *image, struct rtgui_dc *dc,
 			{
 				rtgui_color_t color;
 
-				ptr = bmp->pixels + (y * imageWidth);
 				/* 1bpp, and using palette */
 				for (y = 0; y < h; y ++)
 				{
+                    ptr = bmp->pixels + (y * imageWidth);
 					for (x = 0; x < w; x ++)
 					{
 						color = image->palette->colors[*(ptr++)];

@@ -764,7 +764,7 @@ static rt_bool_t rtgui_image_jpeg_load(struct rtgui_image *image, struct rtgui_f
         res = RT_TRUE;
     } while (0);
 
-    if (!res || jpeg->is_loaded)
+    if (jpeg && (!res || jpeg->is_loaded))
     {
         rt_free(jpeg->pool);
 		jpeg->pool = RT_NULL;
@@ -772,7 +772,8 @@ static rt_bool_t rtgui_image_jpeg_load(struct rtgui_image *image, struct rtgui_f
 
     if (!res)
     {
-        rtgui_free(jpeg->pixels);
+        if (jpeg)
+            rtgui_free(jpeg->pixels);
         rt_free(jpeg);
 
 		image->data   = RT_NULL;

@@ -697,8 +697,10 @@ rtgui_dc_blend_point(struct rtgui_dc * dst, int x, int y, enum RTGUI_BLENDMODE b
 
 		x = x + dc->owner->extent.x1;
 		y = y + dc->owner->extent.y1;
-		if (x > dc->owner->extent.x2) return;
-		if (y > dc->owner->extent.y2) return;
+		if (x >= dc->owner->extent.x2)
+            return;
+		if (y >= dc->owner->extent.y2)
+            return;
 	}
 
     if (blendMode == RTGUI_BLENDMODE_BLEND || blendMode == RTGUI_BLENDMODE_ADD) {
@@ -737,7 +739,7 @@ rtgui_dc_blend_points(struct rtgui_dc *dst, const rtgui_point_t *points, int cou
 	RT_ASSERT(dst != RT_NULL);
 	if (!rtgui_dc_get_visible(dst)) return;
 	/* we do not support pixel DC */
-	if (_dc_get_pixel(dst, 0, 0) == RT_NULL) return; 
+	if (_dc_get_pixel(dst, 0, 0) == RT_NULL) return;
 
     if (blendMode == RTGUI_BLENDMODE_BLEND || blendMode == RTGUI_BLENDMODE_ADD)
 	{
@@ -758,7 +760,7 @@ rtgui_dc_blend_points(struct rtgui_dc *dst, const rtgui_point_t *points, int cou
 	case RTGRAPHIC_PIXEL_FORMAT_ARGB888:
 		func = _dc_blend_point_argb8888;
     default:
-        break;
+        return;
     }
 
 	/* get owner */
