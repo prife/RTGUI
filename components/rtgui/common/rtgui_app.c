@@ -185,6 +185,9 @@ rt_inline rt_bool_t _rtgui_application_dest_handle(
     struct rtgui_event_win *wevent = (struct rtgui_event_win *)event;
     struct rtgui_object *dest_object;
 
+    if (wevent->wid == RT_NULL)
+        return RT_FALSE;
+
     /* this window has been closed. */
     if (wevent->wid != RT_NULL && wevent->wid->flag & RTGUI_WIN_FLAG_CLOSED)
         return RT_TRUE;
