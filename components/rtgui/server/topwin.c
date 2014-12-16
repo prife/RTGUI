@@ -612,10 +612,14 @@ _out:
 rt_err_t rtgui_topwin_hide(struct rtgui_event_win *event)
 {
     struct rtgui_topwin *topwin;
-    struct rtgui_topwin *old_focus_topwin = rtgui_topwin_get_focus();
-    struct rtgui_win    *wid = event->wid;
+    struct rtgui_topwin *old_focus_topwin;
+    struct rtgui_win    *wid;
     struct rt_list_node *containing_list;
 
+    if (!event)
+        return -RT_ERROR;
+
+    wid = event->wid;
     /* find in show list */
     topwin = rtgui_topwin_search_in_list(wid, &_rtgui_topwin_list);
     if (topwin == RT_NULL)
