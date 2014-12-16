@@ -172,7 +172,7 @@ static rt_bool_t rtgui_combobox_onmouse_button(struct rtgui_combobox *box, struc
                 box->pd_win = rtgui_win_create(RT_NULL, "combo", &rect, RTGUI_WIN_STYLE_NO_TITLE);
                 rtgui_win_set_ondeactivate(RTGUI_WIN(box->pd_win), rtgui_combobox_pulldown_hide);
                 /* set user data to parent combobox */
-                box->pd_win->user_data = (rt_uint32_t)box;
+                box->pd_win->user_data = box;
 
                 /* create list box */
                 rtgui_rect_inflate(&rect, -1);
@@ -241,12 +241,10 @@ static rt_bool_t rtgui_combobox_pulldown_hide(struct rtgui_object *object, struc
     RT_ASSERT(event != RT_NULL);
 
     widget = RTGUI_WIDGET(object);
-    box = RTGUI_COMBOBOX(object);
-
-    if (widget == RT_NULL) return RT_TRUE;
 
     box = (struct rtgui_combobox *)(((struct rtgui_win *)widget)->user_data);
-    if (box == RT_NULL) return RT_TRUE;
+    if (box == RT_NULL)
+        return RT_TRUE;
 
     /* hide pull down window */
     rtgui_win_hide(RTGUI_WIN(box->pd_win));
