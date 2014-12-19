@@ -568,22 +568,85 @@ void rtgui_dc_draw_circle(struct rtgui_dc *dc, int x, int y, int r)
 }
 RTM_EXPORT(rtgui_dc_draw_circle);
 
+enum {
+    QUARTER_BTM,
+    QUARTER_BTM_LEFT,
+    QUARTER_BTM_RIGHT,
+    QUARTER_TOP,
+    QUARTER_TOP_LEFT,
+    QUARTER_TOP_RIGHT,
+    QUARTER_FULL,
+};
+
+static void _fill_quarter_circle(struct rtgui_dc *dc,
+                                 rt_int16_t ox, rt_int16_t oy,
+                                 rt_int16_t rad, int quadrant)
+{
+    /* Midpoint circle algorithm. */
+    int dk, x, y;
+
+    dk = 1 - rad;
+    x = 0;
+    y = rad;
+
+    while (x <= y)
+    {
+        switch (quadrant)
+        {
+        case QUARTER_BTM:
+            rtgui_dc_draw_hline(dc, ox - x, ox + x, oy + y);
+            rtgui_dc_draw_hline(dc, ox - y, ox + y, oy + x);
+            break;
+        case QUARTER_BTM_LEFT:
+            rtgui_dc_draw_hline(dc, ox, ox + x, oy + y);
+            rtgui_dc_draw_hline(dc, ox, ox + y, oy + x);
+            break;
+        case QUARTER_BTM_RIGHT:
+            rtgui_dc_draw_hline(dc, ox, ox - x, oy + y);
+            rtgui_dc_draw_hline(dc, ox, ox - y, oy + x);
+            break;
+        case QUARTER_TOP_RIGHT:
+            rtgui_dc_draw_hline(dc, ox, ox - x, oy - y);
+            rtgui_dc_draw_hline(dc, ox, ox - y, oy - x);
+            break;
+        case QUARTER_TOP_LEFT:
+            rtgui_dc_draw_hline(dc, ox, ox + x, oy - y);
+            rtgui_dc_draw_hline(dc, ox, ox + y, oy - x);
+            break;
+        case QUARTER_TOP:
+            rtgui_dc_draw_hline(dc, ox - x, ox + x, oy - y);
+            rtgui_dc_draw_hline(dc, ox - y, ox + y, oy - x);
+            break;
+        case QUARTER_FULL:
+            rtgui_dc_draw_hline(dc, ox - x, ox + x, oy + y);
+            rtgui_dc_draw_hline(dc, ox - y, ox + y, oy + x);
+            rtgui_dc_draw_hline(dc, ox - x, ox + x, oy - y);
+            rtgui_dc_draw_hline(dc, ox - y, ox + y, oy - x);
+            break;
+        default:
+            RT_ASSERT(0);
+        };
+
+        if (dk > 0)
+        {
+            y--;
+            dk += 2 * (x - y) + 5;
+        }
+        else
+        {
+            dk += 2 * x + 3;
+        }
+        x++;
+    }
+}
+
 void rtgui_dc_fill_circle(struct rtgui_dc *dc, rt_int16_t x, rt_int16_t y, rt_int16_t r)
 {
-    rt_int16_t cx = 0;
-    rt_int16_t cy = r;
-    rt_int16_t ocx = (rt_int16_t) 0xffff;
-    rt_int16_t ocy = (rt_int16_t) 0xffff;
-    rt_int16_t df = 1 - r;
-    rt_int16_t d_e = 3;
-    rt_int16_t d_se = -2 * r + 5;
-    rt_int16_t xpcx, xmcx, xpcy, xmcy;
-    rt_int16_t ypcy, ymcy, ypcx, ymcx;
-
     /*
      * Sanity check radius
      */
-    if (r < 0) return;
+    if (r < 0)
+        return;
 
     /*
      * Special case for r=0 - draw a point
@@ -591,70 +654,10 @@ void rtgui_dc_fill_circle(struct rtgui_dc *dc, rt_int16_t x, rt_int16_t y, rt_in
     if (r == 0)
     {
         rtgui_dc_draw_point(dc, x, y);
-        return ;
+        return;
     }
 
-    /*
-     * Draw
-     */
-    do
-    {
-        xpcx = x + cx;
-        xmcx = x - cx;
-        xpcy = x + cy;
-        xmcy = x - cy;
-        if (ocy != cy)
-        {
-            if (cy > 0)
-            {
-                ypcy = y + cy;
-                ymcy = y - cy;
-                rtgui_dc_draw_hline(dc, xmcx, xpcx, ypcy);
-                rtgui_dc_draw_hline(dc, xmcx, xpcx, ymcy);
-            }
-            else
-            {
-                rtgui_dc_draw_hline(dc, xmcx, xpcx, y);
-            }
-            ocy = cy;
-        }
-        if (ocx != cx)
-        {
-            if (cx != cy)
-            {
-                if (cx > 0)
-                {
-                    ypcx = y + cx;
-                    ymcx = y - cx;
-                    rtgui_dc_draw_hline(dc, xmcy, xpcy, ymcx);
-                    rtgui_dc_draw_hline(dc, xmcy, xpcy, ypcx);
-                }
-                else
-                {
-                    rtgui_dc_draw_hline(dc, xmcy, xpcy, y);
-                }
-            }
-            ocx = cx;
-        }
-        /*
-         * Update
-         */
-        if (df < 0)
-        {
-            df += d_e;
-            d_e += 2;
-            d_se += 2;
-        }
-        else
-        {
-            df += d_se;
-            d_e += 2;
-            d_se += 4;
-            cy--;
-        }
-        cx++;
-    }
-    while (cx <= cy);
+    _fill_quarter_circle(dc, x, y, r, QUARTER_FULL);
 }
 RTM_EXPORT(rtgui_dc_fill_circle);
 
