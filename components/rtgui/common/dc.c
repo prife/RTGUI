@@ -1314,95 +1314,203 @@ void rtgui_dc_draw_pie(struct rtgui_dc *dc, rt_int16_t x, rt_int16_t y, rt_int16
 }
 RTM_EXPORT(rtgui_dc_draw_pie);
 
+// Octant labelling
+//
+//  \ 5 | 6 /
+//   \  |  /
+//  4 \ | / 7
+//     \|/
+//------+------ +x
+//     /|\
+//  3 / | \ 0
+//   /  |  \
+//  / 2 | 1 \
+//      +y
+static void _draw_octant(struct rtgui_dc *dc,
+                         rt_int16_t ox, rt_int16_t oy,
+                         rt_int16_t y1, rt_int16_t y2, rt_int16_t x, int oct)
+{
+    switch (oct % 8)
+    {
+    case 0:
+        rtgui_dc_draw_line(dc, ox +  x, oy + y1, ox +  x, oy + y2);
+        break;
+    case 1:
+        /* Ugly hack to get the edge right. */
+        y2 += 1;
+        y1 += 1;
+        x -= 1;
+        rtgui_dc_draw_line(dc, ox + y1, oy +  x, ox + y2, oy +  x);
+        break;
+    case 2:
+        y2 -= 1;
+        y1 -= 1;
+        x -= 1;
+        rtgui_dc_draw_line(dc, ox - y2, oy +  x, ox - y1, oy +  x);
+        break;
+    case 3:
+        x -= 1;
+        rtgui_dc_draw_line(dc, ox -  x, oy + y1, ox -  x, oy + y2);
+        break;
+    case 4:
+        x -= 1;
+        rtgui_dc_draw_line(dc, ox -  x, oy - y2, ox -  x, oy - y1);
+        break;
+    case 5:
+        y2 -= 1;
+        y1 -= 1;
+        rtgui_dc_draw_line(dc, ox - y2, oy -  x, ox - y1, oy -  x);
+        break;
+    case 6:
+        y2 += 1;
+        y1 += 1;
+        rtgui_dc_draw_line(dc, ox + y1, oy -  x, ox + y2, oy -  x);
+        break;
+    case 7:
+        rtgui_dc_draw_line(dc, ox +  x, oy - y2, ox +  x, oy - y1);
+        break;
+    };
+}
+
+static void _fill_small_pie(struct rtgui_dc *dc,
+                            rt_int16_t ox, rt_int16_t oy,
+                            rt_int16_t rad, rt_int16_t start, rt_int16_t end,
+                            int oct)
+{
+    /* Midpoint circle algorithm. */
+    int dk, x, y;
+    /* Start X, end X, */
+    rt_int16_t sx, ex, ty, my;
+    enum {ST_NONE, ST_ARC, ST_TRI} st;
+
+    RT_ASSERT(0 <= start && start <= 45);
+    RT_ASSERT(0 <= end && end <= 45);
+    if (start == end)
+        return;
+    RT_ASSERT(start < end);
+    RT_ASSERT(rad > 0);
+
+    /* cos(90 - start) == sin(start) */
+    sx = rad * sin(start * M_PI / 180);
+    ex = rad * sin(end * M_PI / 180);
+
+    dk = 1 - rad;
+    x = 0;
+    y = rad;
+
+    st = ST_NONE;
+    my = ex;
+    while (x <= y)
+    {
+        rt_int16_t lx;
+
+        if (x < sx)
+        {
+        }
+        else if (x == sx)
+        {
+            /* Start point. */
+            st = ST_ARC;
+            ty = y;
+        }
+        else if (x <= ex)
+        {
+            /* Between the pie. */
+            RT_ASSERT(st == ST_ARC);
+        }
+        else /* x > ex */
+        {
+            /* End. */
+            st = ST_TRI;
+            my = y;
+            break;
+        }
+
+        /* Drawing. */
+        if (st == ST_ARC)
+        {
+            lx = y * sx / ty;
+            /* Change from math coordinate to plot coordinate. */
+            _draw_octant(dc, ox, oy, lx, x, y, oct);
+        }
+
+        /* Midpoint increment. */
+        if (dk > 0)
+        {
+            y--;
+            dk += 2 * (x - y) + 5;
+        }
+        else
+        {
+            dk += 2 * x + 3;
+        }
+        x++;
+    }
+    /* Draw bottom part. */
+    for (; y >= 0; y--)
+    {
+        rt_int16_t lx, rx;
+
+        lx = y * sx / ty;
+        rx = y * ex / my;
+
+        _draw_octant(dc, ox, oy, lx, rx, y, oct);
+    }
+}
+
 void rtgui_dc_fill_pie(struct rtgui_dc *dc, rt_int16_t x, rt_int16_t y, rt_int16_t rad, rt_int16_t start, rt_int16_t end)
 {
-	double angle, start_angle, end_angle;
-	double deltaAngle;
-	double dr;
-	int numpoints, i;
-	int *vx, *vy;
-
 	/* Sanity check radii */
-	if (rad < 0) return ;
+	if (rad < 0)
+        return;
 
 	/*
-	* Fixup angles
-	*/
+     * Fixup angles
+     */
 	start = start % 360;
 	end = end % 360;
-	if (start == end) return;
+	if (start == end)
+        return;
 
 	/*
-	* Special case for rad=0 - draw a point 
-	*/
-	if (rad == 0) {
+     * Special case for rad=0 - draw a point 
+     */
+	if (rad == 0)
+    {
 		rtgui_dc_draw_point(dc, x, y);
 		return;
 	}
 
-	/*
-	* Variable setup 
-	*/
-	dr = (double) rad;
-	deltaAngle = 3.0 / dr;
-	start_angle = (double) start *(2.0 * M_PI / 360.0);
-	end_angle = (double) end *(2.0 * M_PI / 360.0);
-	if (start > end) {
-		end_angle += (2.0 * M_PI);
-	}
+    if (end < start)
+        end += 360;
 
-	/* We will always have at least 2 points */
-	numpoints = 2;
+    while (start / 45 != end / 45)
+    {
+        /* The start and end are not in the same piece. */
+        if ((start / 45) % 2)
+        {
+            _fill_small_pie(dc, x, y, rad,
+                            0, 45 - start % 45, start / 45);
+            start += 45 - start % 45;
+        }
+        else
+        {
+            _fill_small_pie(dc, x, y, rad,
+                            start % 45, 45, start / 45);
+            start += 45 - start % 45;
+        }
+    }
+    if ((start / 45) % 2)
+    {
+        _fill_small_pie(dc, x, y, rad,
+                        90 - end % 90, 90 - start % 90, start / 45);
+    }
+    else
+    {
+        _fill_small_pie(dc, x, y, rad,
+                        start % 45, end % 45, start / 45);
+    }
 
-	/* Count points (rather than calculating it) */
-	angle = start_angle;
-	while (angle < end_angle) {
-		angle += deltaAngle;
-		numpoints++;
-	}
-
-	/* Allocate combined vertex array */
-	vx = vy = (int *) rtgui_malloc(2 * sizeof(int) * numpoints);
-	if (vx == RT_NULL) return;
-
-	/* Update point to start of vy */
-	vy += numpoints;
-
-	/* Center */
-	vx[0] = x;
-	vy[0] = y;
-
-	/* First vertex */
-	angle = start_angle;
-	vx[1] = x + (int) (dr * cos(angle));
-	vy[1] = y + (int) (dr * sin(angle));
-
-	if (numpoints<3)
-	{
-		rtgui_dc_draw_line(dc, vx[0], vy[0], vx[1], vy[1]);
-	}
-	else
-	{
-		/* Calculate other vertices */
-		i = 2;
-		angle = start_angle;
-		while (angle < end_angle) {
-			angle += deltaAngle;
-			if (angle>end_angle)
-			{
-				angle = end_angle;
-			}
-			vx[i] = x + (int) (dr * cos(angle));
-			vy[i] = y + (int) (dr * sin(angle));
-			i++;
-		}
-
-		/* Draw */
-		rtgui_dc_fill_polygon(dc, vx, vy, numpoints);
-	}
-
-	/* Free combined vertex array */
-	rtgui_free(vx);
 	return;
 }
 RTM_EXPORT(rtgui_dc_fill_pie);
