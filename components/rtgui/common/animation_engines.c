@@ -84,9 +84,6 @@ void rtgui_anim_engine_fade(struct rtgui_dc *background,
     if (!buf) return;
 
     info.a = cur_lvl;
-	rt_kprintf("alpha: %d\n", cur_lvl);
-	if (cur_lvl < 100 && cur_lvl > 80)
-		rt_kprintf("here!\n");
 
 	buf_items	   = (struct rtgui_dc_buffer*) items;
     info.src       = buf_items->pixel;
