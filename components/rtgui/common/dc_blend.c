@@ -1719,7 +1719,7 @@ void rtgui_dc_draw_aa_ellipse(struct rtgui_dc *dc, rt_int16_t  x, rt_int16_t y, 
 	int i;
 	int a2, b2, ds, dt, dxt, t, s, d;
 	rt_int16_t xp, yp, xs, ys, od, dyt, xx, yy, xc2, yc2;
-	float cp;
+	int cp;
 	double sab;
 	rt_uint8_t weight, iweight;
 	rt_uint8_t r, g, b, a;
@@ -1804,16 +1804,16 @@ void rtgui_dc_draw_aa_ellipse(struct rtgui_dc *dc, rt_int16_t  x, rt_int16_t y, 
 
 		/* Calculate alpha */
 		if (s != 0) {
-			cp = (float) abs(d) / (float) abs(s);
-			if (cp > 1.0) {
-				cp = 1.0;
+			cp = 255 * abs(d) / abs(s);
+			if (cp > 255) {
+				cp = 255;
 			}
 		} else {
-			cp = 1.0;
+			cp = 255;
 		}
 
 		/* Calculate weights */
-		weight = (rt_uint8_t) (cp * 255);
+		weight = cp;
 		iweight = 255 - weight;
 
 		/* Upper half */
@@ -1864,16 +1864,16 @@ void rtgui_dc_draw_aa_ellipse(struct rtgui_dc *dc, rt_int16_t  x, rt_int16_t y, 
 
 		/* Calculate alpha */
 		if (t != 0) {
-			cp = (float) abs(d) / (float) abs(t);
-			if (cp > 1.0) {
-				cp = 1.0;
+			cp = 255 * abs(d) / abs(t);
+			if (cp > 255) {
+				cp = 255;
 			}
 		} else {
-			cp = 1.0;
+			cp = 255;
 		}
 
 		/* Calculate weight */
-		weight = (rt_uint8_t) (cp * 255);
+		weight = cp;
 		iweight = 255 - weight;
 
 		/* Left half */
