@@ -1468,7 +1468,8 @@ void rtgui_dc_fill_pie(struct rtgui_dc *dc, rt_int16_t x, rt_int16_t y, rt_int16
      * Fixup angles
      */
 	start = start % 360;
-	end = end % 360;
+    /* Cope with end == 360. */
+	end = end % 361;
 	if (start == end)
         return;
 
