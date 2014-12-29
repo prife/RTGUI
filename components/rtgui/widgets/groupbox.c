@@ -131,7 +131,7 @@ struct rtgui_widget *rtgui_groupbox_get_selected(struct rtgui_groupbox *box)
 
 void rtgui_groupbox_add_widget(struct rtgui_groupbox *box, struct rtgui_widget *widget)
 {
-    widget->user_data = box;
+    widget->user_data = (rt_uint32_t)box;
     rtgui_container_add_child(RTGUI_CONTAINER(box), widget);
     RTGUI_WIDGET_ALIGN(widget) = RTGUI_ALIGN_CENTER;
     RTGUI_WIDGET_BACKGROUND(widget) = RTGUI_WIDGET_BACKGROUND(box);
