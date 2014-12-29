@@ -14,7 +14,7 @@ typedef struct
 	int y[5], yfb[5];
 } calibration_typedef;
 
-typedef struct 
+typedef struct
 {
 	int  x_coord[3];
 	int  y_coord[3];
@@ -30,7 +30,7 @@ typedef struct
  */
 void calibration_set_after(rt_bool_t (*calibration_after)(calculate_data_t*cal));
 
-void calibration_init(void);
+void calibration_init(void*);
 void calibration_set_data(calculate_data_t *data);
 
 /* get the calibration ops */

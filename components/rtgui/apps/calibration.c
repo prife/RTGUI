@@ -422,7 +422,7 @@ __free_ptr:
     calibration_ptr = RT_NULL;
 }
 
-void calibration_init(void)
+void calibration_init(void *p)
 {
     rt_thread_t tid;
 
@@ -441,7 +441,7 @@ void calibration_init(void)
 #include <finsh.h>
 void calibration(void)
 {
-    calibration_init();
+    calibration_init(RT_NULL);
 }
 FINSH_FUNCTION_EXPORT(calibration, perform touch calibration);
 #endif
