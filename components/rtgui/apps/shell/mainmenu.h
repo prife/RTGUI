@@ -26,6 +26,8 @@ void mainmenu_register_internal_app(char *name, char *text, rtgui_image_t *image
                                     void (*app_starter)(void *), void *p);
 void mainmenu_unregister_app(char *name);
 
+void tasklist_show(void *p);
+
 #ifdef RT_USING_MODULE 
 void mainmenu_register_app(char *name);
 #endif

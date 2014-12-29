@@ -712,6 +712,13 @@ static void app_mainmenu_init(void)
     }
 }
 
+static rtgui_win_t *tasklist_win;
+
+void tasklist_show(void *p)
+{
+    rtgui_win_show(tasklist_win, RT_TRUE);
+}
+
 static void app_mainmenu_entry(void *parameter)
 {
     struct rtgui_app *application;
@@ -728,6 +735,9 @@ static void app_mainmenu_entry(void *parameter)
         /* set our event handler */
         rtgui_object_set_event_handler(RTGUI_OBJECT(application),
                                        event_handler);
+
+        tasklist_win = tasklist_win_create(RT_NULL);
+
         rtgui_app_run(application);
         rtgui_app_destroy(application);
     }
