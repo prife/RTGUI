@@ -4,8 +4,10 @@
 #include "statusbar.h"
 #include <rtgui/dc.h>
 #include <rtgui/image.h>
-#include "netif/ethernetif.h"
 
+#ifdef RT_USING_LWIP
+#include "netif/ethernetif.h"
+#endif
 
 #define RESOURCE_PATH "/resource/statusbar"
 #define TIME_POS  370
@@ -58,6 +60,7 @@ rt_bool_t statusbar_event_handler(struct rtgui_object *object, struct rtgui_even
 
     return RT_FALSE;
 }
+
 static void statusbar_draw(void)
 {
     struct rtgui_rect rect;
@@ -72,6 +75,7 @@ static void statusbar_draw(void)
     statusbar_set_title(title);
     statusbar_show_back_button(backstatus);
 }
+
 /* hh:mm */
 static char _time_text[6];
 static void update_time(void)
@@ -95,6 +99,7 @@ static void update_time(void)
     rtgui_dc_end_drawing(dc);
 }
 
+#ifdef RT_USING_LWIP
 static void update_network_status(void)
 {
     struct rtgui_rect rect;
@@ -119,6 +124,11 @@ static void update_network_status(void)
     rtgui_dc_end_drawing(dc);
 
 }
+#else
+static void update_network_status(void)
+{}
+#endif
+
 static rt_uint8_t time_count = 0;
 static void timer_timeout(struct rtgui_timer *timer, void *parameter)
 {
@@ -155,6 +165,7 @@ void statusbar_show_back_button(rt_bool_t enable)
     }
     rtgui_dc_end_drawing(dc);
 }
+
 void statusbar_set_title(char *text)
 {
     struct rtgui_dc *dc;
@@ -173,6 +184,7 @@ void statusbar_set_title(char *text)
     }
     rtgui_dc_end_drawing(dc);
 }
+
 void statusbar_init(void)
 {
     rtgui_rect_t rect;
