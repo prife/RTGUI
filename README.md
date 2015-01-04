@@ -26,9 +26,9 @@ player. The features of RTGUI contains:
 
     Install VS(2008+, express edition should be OK), run scons on the root
     directory of this project. There will be two executeables in the folder
-    executeables/. One is demo.exe, the other is realtouch.exe. After copying
-    SDL.dll from win32/SDL/lib to executeables/, you are ready to run the
-    programs above.
+    executeables/. One is demo.exe, the other is demo_shell.exe. After copying
+    resource/ and $RTT_ROOT/bsp/simulator/SDL/lib/x86/SDL.dll to executeables/,
+    you are ready to run the programs above.
 
 2. use it in RT-Thread
 
