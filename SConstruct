@@ -82,7 +82,7 @@ else:
 
 # list of targets, list item format in:
 #     ['executable_name', 'path_to_SConscript']
-TARGETS = [['demo', 'demo'], ['realtouch', 'realtouch']]
+TARGETS = [['demo', 'demo'], ['demo_shell', 'demo_shell']]
 
 exe_dir = 'executables'
 

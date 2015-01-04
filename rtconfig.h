@@ -2,7 +2,7 @@
 #ifndef __RTTHREAD_CFG_H__
 #define __RTTHREAD_CFG_H__
 
-#define RT_HEAP_SIZE   (1024*1024*2)
+#define RT_HEAP_SIZE   (1024*1024*8)
 
 #if  defined(_MSC_VER)
 /* SECTION: port for visual studio */
@@ -152,7 +152,7 @@
 /* the max number of mounted file system */
 #define DFS_FILESYSTEMS_MAX			4
 /* the max number of opened files 		*/
-#define DFS_FD_MAX					4
+#define DFS_FD_MAX					32
 
 /* SECTION: lwip, a lightweight TCP/IP protocol stack */
 /* #define RT_USING_LWIP */
@@ -239,7 +239,10 @@
 #define RTGUI_USING_WINMOVE
 #define RTGUI_USING_NOTEBOOK_IMAGE
 #define RTGUI_USING_DIALOG
+#define RTGUI_USING_APP_SHELL
 
 #define RTGUI_USING_ID_CHECK
+
+#define RT_USING_TTF
 
 #endif
