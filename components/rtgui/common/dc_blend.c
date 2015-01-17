@@ -531,6 +531,7 @@ void rtgui_dc_draw_aa_line(struct rtgui_dc * dst, int x1, int y1, int x2, int y2
 
     _do_draw_line(dst, color, x1, y1, x2, y2, RT_FALSE);
 }
+RTM_EXPORT(rtgui_dc_draw_aa_line);
 
 void rtgui_dc_draw_aa_lines(struct rtgui_dc * dst, const struct rtgui_point * points, int count)
 {

@@ -25,6 +25,7 @@ const struct rtgui_font_engine bmp_font_engine =
     rtgui_bitmap_font_draw_text,
     rtgui_bitmap_font_get_metrics
 };
+RTM_EXPORT(bmp_font_engine);
 
 void rtgui_bitmap_font_draw_char(struct rtgui_font_bitmap *font, struct rtgui_dc *dc, const char ch,
                                  rtgui_rect_t *rect)

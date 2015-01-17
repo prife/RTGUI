@@ -1602,9 +1602,11 @@ RTM_EXPORT(rtgui_dc_get_gc);
 rt_bool_t rtgui_dc_get_visible(struct rtgui_dc *dc)
 {
 	rt_bool_t result = RT_TRUE;
-	
+
 	RT_ASSERT(dc != RT_NULL);
-	if (rtgui_graphic_driver_is_vmode()) return RT_TRUE;
+
+	if (rtgui_graphic_driver_is_vmode())
+        return RT_TRUE;
 
 	switch (dc->type)
 	{

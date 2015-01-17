@@ -60,6 +60,7 @@ struct rtgui_dc *rtgui_dc_buffer_create(int w, int h)
 	/* create a dc_buffer with hardware driver pixel format */
 	return rtgui_dc_buffer_create_pixformat(pixel_format, w, h);
 }
+RTM_EXPORT(rtgui_dc_buffer_create);
 
 struct rtgui_dc *rtgui_dc_buffer_create_pixformat(rt_uint8_t pixel_format, int w, int h)
 {
@@ -88,6 +89,7 @@ struct rtgui_dc *rtgui_dc_buffer_create_pixformat(rt_uint8_t pixel_format, int w
 
     return &(dc->parent);
 }
+RTM_EXPORT(rtgui_dc_buffer_create_pixformat);
 
 struct rtgui_dc *rtgui_dc_buffer_create_from_dc(struct rtgui_dc* dc)
 {

@@ -24,11 +24,13 @@ struct rtgui_dc_trans* rtgui_dc_trans_create(struct rtgui_dc *owner)
 
     return dct;
 }
+RTM_EXPORT(rtgui_dc_trans_create);
 
 void rtgui_dc_trans_destroy(struct rtgui_dc_trans *dct)
 {
     rtgui_free(dct);
 }
+RTM_EXPORT(rtgui_dc_trans_destroy);
 
 void rtgui_dc_trans_set_aa(struct rtgui_dc_trans *dct, int use_aa)
 {
@@ -36,6 +38,7 @@ void rtgui_dc_trans_set_aa(struct rtgui_dc_trans *dct, int use_aa)
 
     dct->use_aa = use_aa;
 }
+RTM_EXPORT(rtgui_dc_trans_set_aa);
 
 void rtgui_dc_trans_rotate(struct rtgui_dc_trans *dct, double degree)
 {
@@ -43,6 +46,7 @@ void rtgui_dc_trans_rotate(struct rtgui_dc_trans *dct, double degree)
 
     rtgui_matrix_rotate(&dct->m, degree * (1024 / 360.0));
 }
+RTM_EXPORT(rtgui_dc_trans_rotate);
 
 void rtgui_dc_trans_scale(struct rtgui_dc_trans *dct,
                           double sx,
@@ -52,6 +56,7 @@ void rtgui_dc_trans_scale(struct rtgui_dc_trans *dct,
 
     rtgui_matrix_scale(&dct->m, sx * 1024, sy * 1024);
 }
+RTM_EXPORT(rtgui_dc_trans_scale);
 
 void rtgui_dc_trans_move(struct rtgui_dc_trans *dct,
                          int dx,
@@ -61,6 +66,7 @@ void rtgui_dc_trans_move(struct rtgui_dc_trans *dct,
 
     rtgui_matrix_move(&dct->m, dx, dy);
 }
+RTM_EXPORT(rtgui_dc_trans_move);
 
 void rtgui_dc_trans_get_new_wh(struct rtgui_dc_trans *dct,
                                int *new_wp,
@@ -120,6 +126,7 @@ void rtgui_dc_trans_get_new_wh(struct rtgui_dc_trans *dct,
     }
 #undef NORMALIZE
 }
+RTM_EXPORT(rtgui_dc_trans_get_new_wh);
 
 struct _fb_rect
 {
@@ -829,4 +836,5 @@ void rtgui_dc_trans_blit(struct rtgui_dc_trans *dct,
     else
         rt_kprintf("not implemented yet\n");
 }
+RTM_EXPORT(rtgui_dc_trans_blit);
 

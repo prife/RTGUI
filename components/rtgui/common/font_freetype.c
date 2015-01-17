@@ -400,6 +400,7 @@ _err_done_malloc:
 
     return RT_NULL;
 }
+RTM_EXPORT(rtgui_freetype_font_create);
 
 void rtgui_freetype_font_destroy(rtgui_font_t *font)
 {
