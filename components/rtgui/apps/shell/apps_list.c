@@ -12,6 +12,7 @@ struct rtgui_application_item
 {
     struct rtgui_app *app;
 };
+
 static rtgui_win_t *applist_win;
 static struct rtgui_application_item *app_items = RT_NULL;
 static rt_uint16_t app_count = 0;
@@ -38,17 +39,16 @@ static void _handle_app_create(struct rtgui_event_application *event)
     }
 
     app_count += 1;
-    if (app_items == RT_NULL)
-        app_items = (struct rtgui_application_item *) rtgui_malloc(sizeof(struct rtgui_application_item));
-    else
-        app_items = (struct rtgui_application_item *) rtgui_realloc(app_items, sizeof(struct rtgui_application_item) * app_count);
+    nptr = rtgui_realloc(app_items,
+                         sizeof(struct rtgui_application_item) * app_count);
 
-    if (app_items == RT_NULL)
+    if (nptr == RT_NULL)
     {
         status = RTGUI_STATUS_ERROR;
         goto __exit;
     }
 
+    app_items = nptr;
     app = event->app;
 
     app_items[app_count - 1].app = app;
@@ -79,7 +79,9 @@ static void _handle_app_destroy(struct rtgui_event_application *event)
             }
             else if (index == app_count)
             {
-                app_items = (struct rtgui_application_item *)rtgui_realloc(app_items, app_count * sizeof(struct rtgui_application_item));
+                app_items = (struct rtgui_application_item *)
+                    rtgui_realloc(app_items,
+                                  app_count * sizeof(struct rtgui_application_item));
             }
             else
             {
@@ -88,7 +90,9 @@ static void _handle_app_destroy(struct rtgui_event_application *event)
                 {
                     app_items[j] = app_items[j + 1];
                 }
-                app_items = (struct rtgui_application_item *)rtgui_realloc(app_items, app_count * sizeof(struct rtgui_application_item));
+                app_items = (struct rtgui_application_item *)
+                    rtgui_realloc(app_items,
+                                  app_count * sizeof(struct rtgui_application_item));
             }
             rtgui_listctrl_set_items(app_list, app_items, app_count);
             rtgui_ack(RTGUI_EVENT(event), RTGUI_STATUS_OK);
@@ -132,7 +136,8 @@ rt_bool_t apps_list_event_handler(struct rtgui_object *object, struct rtgui_even
     return RT_TRUE;
 }
 
-static rt_bool_t apps_listctrl_event_handler(struct rtgui_object *object, struct rtgui_event *event)
+static rt_bool_t apps_listctrl_event_handler(struct rtgui_object *object,
+                                             struct rtgui_event *event)
 {
     struct rtgui_listctrl *ctrl;
 
@@ -150,13 +155,15 @@ static rt_bool_t apps_listctrl_event_handler(struct rtgui_object *object, struct
             close_rect = rect;
             close_rect.x1 = close_rect.x2 - 50;
 
-            if ((rtgui_rect_contains_point(&close_rect, emouse->x, emouse->y) == RT_EOK) &&
-                    (ctrl->items_count > 0))
+            if ((rtgui_rect_contains_point(&close_rect,
+                                           emouse->x, emouse->y) == RT_EOK) &&
+                (ctrl->items_count > 0))
             {
                 rt_uint16_t index;
                 index = (emouse->y - rect.y1) / (2 + ctrl->item_height);
                 if ((index < ctrl->page_items) &&
-                        (ctrl->current_item / ctrl->page_items)* ctrl->page_items + index < ctrl->items_count)
+                    (ctrl->current_item / ctrl->page_items)
+                    * ctrl->page_items + index < ctrl->items_count)
                 {
                     rt_uint16_t cur_item;
 
@@ -176,7 +183,10 @@ static rt_bool_t apps_listctrl_event_handler(struct rtgui_object *object, struct
     return rtgui_listctrl_event_handler(object, event);
 }
 
-static void _app_info_draw(struct rtgui_listctrl *list, struct rtgui_dc *dc, rtgui_rect_t *rect, rt_uint16_t index)
+static void _app_info_draw(struct rtgui_listctrl *list,
+                           struct rtgui_dc *dc,
+                           rtgui_rect_t *rect,
+                           rt_uint16_t index)
 {
     struct rtgui_image *image;
     rtgui_rect_t item_rect, image_rect;
@@ -199,7 +209,8 @@ static void _app_info_draw(struct rtgui_listctrl *list, struct rtgui_dc *dc, rtg
         image_rect.x2 = app_default_icon->w;
         image_rect.y2 = app_default_icon->h;
 
-        rtgui_rect_moveto_align(&item_rect, &image_rect, RTGUI_ALIGN_CENTER_VERTICAL);
+        rtgui_rect_moveto_align(&item_rect, &image_rect,
+                                RTGUI_ALIGN_CENTER_VERTICAL);
         rtgui_image_blit(image, dc, &image_rect);
     }
     item_rect.x1 += app_default_icon->w + RTGUI_WIDGET_DEFAULT_MARGIN;
@@ -216,10 +227,12 @@ static void _app_info_draw(struct rtgui_listctrl *list, struct rtgui_dc *dc, rtg
         image_rect.y2 = app_close->h;
 
         item_rect.x1 = item_rect.x2 - 50;
-        rtgui_rect_moveto_align(&item_rect, &image_rect, RTGUI_ALIGN_CENTER_VERTICAL);
+        rtgui_rect_moveto_align(&item_rect, &image_rect,
+                                RTGUI_ALIGN_CENTER_VERTICAL);
         rtgui_image_blit(app_close, dc, &image_rect);
     }
 }
+
 struct rtgui_app *rtgui_app_find(const char *app_name)
 {
     struct rtgui_application_item *item;
@@ -235,20 +248,25 @@ struct rtgui_app *rtgui_app_find(const char *app_name)
     return RT_NULL;
 }
 
-static void app_close_onbutton(struct rtgui_object *object, struct rtgui_event *event)
+static void app_close_onbutton(struct rtgui_object *object,
+                               struct rtgui_event *event)
 {
 
     /* get current item */
-    if ((app_list->current_item >= 0) && (app_list->current_item < app_list->items_count))
+    if ((app_list->current_item >= 0) &&
+        (app_list->current_item < app_list->items_count))
     {
         rt_kprintf("close app\n");
         rtgui_app_close(app_items[app_list->current_item].app);
     }
 }
+
 static void app_activate_onbutton(struct rtgui_object *object, struct rtgui_event *event)
 {
     struct rtgui_application_item *item;
-    if (app_list->current_item == -1) return ;
+
+    if (app_list->current_item == -1)
+        return;
     item = &app_items[app_list->current_item];
     if (item != RT_NULL && item->app != RT_NULL)
     {
@@ -256,10 +274,12 @@ static void app_activate_onbutton(struct rtgui_object *object, struct rtgui_even
         statusbar_show_back_button(RT_TRUE);
     }
 }
+
 static void close_onbutton(struct rtgui_object *object, struct rtgui_event *event)
 {
     rtgui_win_close(applist_win);
 }
+
 rtgui_win_t *tasklist_win_create(rtgui_win_t *parent)
 {
 
@@ -267,18 +287,25 @@ rtgui_win_t *tasklist_win_create(rtgui_win_t *parent)
     rtgui_box_t *main_box, *foot_box;
     struct rtgui_panel  *foot_panel, *panel;
     rtgui_button_t *button;
-    applist_win = rtgui_mainwin_create(parent, "tasklist", RTGUI_WIN_STYLE_DEFAULT);
+
+    applist_win = rtgui_mainwin_create(parent,
+                                       "tasklist",
+                                       RTGUI_WIN_STYLE_DEFAULT);
     if (applist_win != RT_NULL)
     {
         main_box = rtgui_box_create(RTGUI_VERTICAL, 5);
         rtgui_container_set_box(RTGUI_CONTAINER(applist_win), main_box);
         if (app_default_icon == RT_NULL)
         {
-            app_default_icon = rtgui_image_create_from_mem("xpm", (const rt_uint8_t *)exec_xpm, sizeof(exec_xpm), RT_FALSE);
+            app_default_icon = rtgui_image_create_from_mem("xpm",
+                                                           (const rt_uint8_t *)exec_xpm,
+                                                           sizeof(exec_xpm), RT_FALSE);
         }
         if (app_close == RT_NULL)
         {
-            app_close = rtgui_image_create_from_mem("xpm", (const rt_uint8_t *)close_xpm, sizeof(close_xpm), RT_FALSE);
+            app_close = rtgui_image_create_from_mem("xpm",
+                                                    (const rt_uint8_t *)close_xpm,
+                                                    sizeof(close_xpm), RT_FALSE);
         }
         app_list = rtgui_listctrl_create(app_items, app_count, &rect, _app_info_draw);
         RTGUI_WIDGET_ALIGN(RTGUI_WIDGET(app_list)) = RTGUI_ALIGN_EXPAND | RTGUI_ALIGN_STRETCH;
