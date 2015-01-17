@@ -109,6 +109,12 @@ struct rtgui_dc* rtgui_graphic_driver_get_rect_buffer(const struct rtgui_graphic
 	return (struct rtgui_dc*)buffer;
 }
 RTM_EXPORT(rtgui_graphic_driver_get_rect_buffer);
+#else
+rt_bool_t rtgui_graphic_driver_is_vmode(void)
+{
+	return RT_FALSE;
+}
+RTM_EXPORT(rtgui_graphic_driver_is_vmode);
 #endif
 
 /* get default driver */

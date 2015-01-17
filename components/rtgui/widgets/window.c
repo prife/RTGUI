@@ -640,6 +640,7 @@ rt_bool_t rtgui_win_event_handler(struct rtgui_object *object, struct rtgui_even
         rtgui_win_ondraw(win);
         break;
 
+#ifdef RTGUI_USING_VFRAMEBUFFER
 	case RTGUI_EVENT_VPAINT_REQ:
 	{
 		struct rtgui_dc *dc;
@@ -656,6 +657,7 @@ rt_bool_t rtgui_win_event_handler(struct rtgui_object *object, struct rtgui_even
 			sizeof(struct rtgui_event_vpaint_ack));
 		break;
 	}
+#endif
 
     case RTGUI_EVENT_MOUSE_BUTTON: {
         struct rtgui_event_mouse *emouse = (struct rtgui_event_mouse*)event;
