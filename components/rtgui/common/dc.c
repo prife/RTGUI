@@ -1784,7 +1784,13 @@ struct rtgui_dc *rtgui_dc_begin_drawing(rtgui_widget_t *owner)
 	RT_ASSERT(owner != RT_NULL);
 
 	win = owner->toplevel;
-	if (win == RT_NULL) return RT_NULL;
+	if (win == RT_NULL)
+        return RT_NULL;
+
+#ifdef RTGUI_ONLY_DRAW_ACTIVE_WIN
+    if (!(win->flag & RTGUI_WIN_FLAG_ACTIVATE))
+        return RT_NULL;
+#endif
 
 	/* increase drawing count */
 	win->drawing ++;
