@@ -416,6 +416,7 @@ void rtgui_freetype_font_destroy(rtgui_font_t *font)
     FT_Done_FreeType(fft->library);
     rtgui_free(font);
 }
+RTM_EXPORT(rtgui_freetype_font_destroy);
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
