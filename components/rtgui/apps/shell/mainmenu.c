@@ -695,12 +695,12 @@ static void app_mainmenu_init(void)
 #endif
         /* create background image */
         bg_image = rtgui_image_create("/resource/bg_image.jpg", RT_TRUE);
-        ycircle_image = rtgui_image_create("/resource/ycircle.png", RT_TRUE);
-        gcircle_image = rtgui_image_create("/resource/gcircle.png", RT_TRUE);
         if (bg_image == RT_NULL)
         {
-            rt_kprintf("open bg image fail\n");
+            rt_kprintf("open \"/resource/bg_image.jpg\" failed\n");
         }
+        ycircle_image = rtgui_image_create("/resource/ycircle.png", RT_TRUE);
+        gcircle_image = rtgui_image_create("/resource/gcircle.png", RT_TRUE);
         app_list = app_list_create(&rect, items, ITEM_MAX, 2, 5, bg_image);
         rtgui_image_destroy(bg_image);
         app_list_draw(app_list);

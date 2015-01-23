@@ -22,6 +22,7 @@ static struct rtgui_image *app_close = RT_NULL;
 
 static void _handle_app_create(struct rtgui_event_application *event)
 {
+    void *nptr;
     rt_uint32_t index;
     rt_int32_t status;
     struct rtgui_app *app;
