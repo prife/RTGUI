@@ -646,9 +646,6 @@ rt_err_t rtgui_topwin_hide(struct rtgui_event_win *event)
     /* update clip info */
     rtgui_topwin_update_clip();
 
-    /* redraw the old rect */
-    rtgui_topwin_redraw(&(topwin->extent));
-
     if (topwin->flag & WINTITLE_MODALING)
     {
         topwin->flag &= ~WINTITLE_MODALING;
@@ -661,6 +658,9 @@ rt_err_t rtgui_topwin_hide(struct rtgui_event_win *event)
     }
 
     topwin->flag &= ~WINTITLE_ACTIVATE;
+
+    /* redraw the old rect */
+    rtgui_topwin_redraw(&(topwin->extent));
 
     return RT_EOK;
 }
