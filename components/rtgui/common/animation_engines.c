@@ -42,6 +42,7 @@ void rtgui_anim_engine_move(struct rtgui_dc *background,
     if (items)
         rtgui_dc_blit((struct rtgui_dc*)(items), NULL, background, &dc_rect);
 }
+RTM_EXPORT(rtgui_anim_engine_move);
 
 void rtgui_anim_engine_fade(struct rtgui_dc *background,
                             struct rtgui_dc *background_buffer,
@@ -106,6 +107,7 @@ void rtgui_anim_engine_fade(struct rtgui_dc *background,
     rtgui_dc_blit((struct rtgui_dc*)buf, NULL, background, NULL);
     rtgui_dc_destory((struct rtgui_dc*)buf);
 }
+RTM_EXPORT(rtgui_anim_engine_fade);
 
 void rtgui_anim_engine_roto(struct rtgui_dc *background,
                             struct rtgui_dc *background_buffer,
@@ -144,4 +146,5 @@ void rtgui_anim_engine_roto(struct rtgui_dc *background,
 
     rtgui_dc_trans_destroy(trans);
 }
+RTM_EXPORT(rtgui_anim_engine_roto);
 

@@ -32,12 +32,14 @@ int rtgui_anim_motion_linear(unsigned int tick, unsigned int max_tick)
 {
     return tick * RTGUI_ANIM_TICK_RANGE / max_tick;
 }
+RTM_EXPORT(rtgui_anim_motion_linear);
 
 int rtgui_anim_motion_insquare(unsigned int tick, unsigned int max_tick)
 {
     /* Care about integer overflow. tick can within 0~(4G/RTGUI_ANIM_TICK_RANGE). */
     return tick * RTGUI_ANIM_TICK_RANGE / max_tick * tick / max_tick;
 }
+RTM_EXPORT(rtgui_anim_motion_insquare);
 
 int rtgui_anim_motion_outsquare(unsigned int tick, unsigned int max_tick)
 {
@@ -46,6 +48,7 @@ int rtgui_anim_motion_outsquare(unsigned int tick, unsigned int max_tick)
     return RTGUI_ANIM_TICK_RANGE - (tick * RTGUI_ANIM_TICK_RANGE / max_tick *
                                     tick / max_tick);
 }
+RTM_EXPORT(rtgui_anim_motion_outsquare);
 
 static void _anim_timeout(struct rtgui_timer *timer, void *parameter)
 {
@@ -127,6 +130,7 @@ struct rtgui_animation* rtgui_anim_create(struct rtgui_widget *parent,
 
     return anim;
 }
+RTM_EXPORT(rtgui_anim_create);
 
 void rtgui_anim_destroy(struct rtgui_animation *anim)
 {
@@ -135,6 +139,7 @@ void rtgui_anim_destroy(struct rtgui_animation *anim)
     rtgui_timer_destory(anim->timer);
     rtgui_free(anim);
 }
+RTM_EXPORT(rtgui_anim_destroy);
 
 struct rtgui_widget* rtgui_anim_get_owner(struct rtgui_animation *anim)
 {
@@ -142,6 +147,7 @@ struct rtgui_widget* rtgui_anim_get_owner(struct rtgui_animation *anim)
 
     return anim->parent;
 }
+RTM_EXPORT(rtgui_anim_get_owner);
 
 void rtgui_anim_set_fg_buffer(struct rtgui_animation *anim,
                               struct rtgui_dc *dc,
@@ -152,11 +158,13 @@ void rtgui_anim_set_fg_buffer(struct rtgui_animation *anim,
     anim->fg_buf = dc;
     anim->dc_cnt = cnt;
 }
+RTM_EXPORT(rtgui_anim_set_fg_buffer);
 
 struct rtgui_dc* rtgui_anim_get_fg_buffer(struct rtgui_animation *anim, int index)
 {
 	return &(anim->fg_buf[index]);
 }
+RTM_EXPORT(rtgui_anim_get_fg_buffer);
 
 void rtgui_anim_set_bg_buffer(struct rtgui_animation *anim,
                               struct rtgui_dc *dc)
@@ -165,6 +173,7 @@ void rtgui_anim_set_bg_buffer(struct rtgui_animation *anim,
 
     anim->bg_buf = dc;
 }
+RTM_EXPORT(rtgui_anim_set_bg_buffer);
 
 struct rtgui_dc* rtgui_anim_get_bg_buffer(struct rtgui_animation *anim)
 {
@@ -172,6 +181,7 @@ struct rtgui_dc* rtgui_anim_get_bg_buffer(struct rtgui_animation *anim)
 
 	return anim->bg_buf;
 }
+RTM_EXPORT(rtgui_anim_get_bg_buffer);
 
 void rtgui_anim_set_engine(struct rtgui_animation *anim,
                            rtgui_anim_engine engine,
@@ -182,6 +192,7 @@ void rtgui_anim_set_engine(struct rtgui_animation *anim,
     anim->engine = engine;
     anim->eng_ctx = ctx;
 }
+RTM_EXPORT(rtgui_anim_set_engine);
 
 void* rtgui_anim_get_engine_ctx(struct rtgui_animation *anim)
 {
@@ -189,6 +200,7 @@ void* rtgui_anim_get_engine_ctx(struct rtgui_animation *anim)
 
     return anim->eng_ctx;
 }
+RTM_EXPORT(rtgui_anim_get_engine_ctx);
 
 unsigned int rtgui_anim_get_duration(struct rtgui_animation *anim)
 {
@@ -196,6 +208,7 @@ unsigned int rtgui_anim_get_duration(struct rtgui_animation *anim)
 
     return anim->max_tick;
 }
+RTM_EXPORT(rtgui_anim_get_duration);
 
 unsigned int rtgui_anim_get_cur_tick(struct rtgui_animation *anim)
 {
@@ -203,6 +216,7 @@ unsigned int rtgui_anim_get_cur_tick(struct rtgui_animation *anim)
 
     return anim->tick;
 }
+RTM_EXPORT(rtgui_anim_get_cur_tick);
 
 void rtgui_anim_set_cur_tick(struct rtgui_animation *anim, unsigned int tick)
 {
@@ -213,6 +227,7 @@ void rtgui_anim_set_cur_tick(struct rtgui_animation *anim, unsigned int tick)
     else
         anim->tick = tick;
 }
+RTM_EXPORT(rtgui_anim_set_cur_tick);
 
 void rtgui_anim_set_onfinish(struct rtgui_animation *anim,
                              rtgui_anim_onfinish on_finish, void* user_data)
@@ -222,6 +237,7 @@ void rtgui_anim_set_onfinish(struct rtgui_animation *anim,
     anim->on_finish = on_finish;
 	anim->user_data = user_data;
 }
+RTM_EXPORT(rtgui_anim_set_onfinish);
 
 void rtgui_anim_set_motion(struct rtgui_animation *anim,
                            rtgui_anim_motion motion)
@@ -230,6 +246,7 @@ void rtgui_anim_set_motion(struct rtgui_animation *anim,
 
     anim->motion = motion;
 }
+RTM_EXPORT(rtgui_anim_set_motion);
 
 void rtgui_anim_set_duration(struct rtgui_animation *anim,
                              unsigned int tick)
@@ -238,6 +255,7 @@ void rtgui_anim_set_duration(struct rtgui_animation *anim,
 
     anim->max_tick = tick;
 }
+RTM_EXPORT(rtgui_anim_set_duration);
 
 void rtgui_anim_start(struct rtgui_animation *anim)
 {
@@ -249,6 +267,7 @@ void rtgui_anim_start(struct rtgui_animation *anim)
         rtgui_timer_start(anim->timer);
     }
 }
+RTM_EXPORT(rtgui_anim_start);
 
 void rtgui_anim_stop(struct rtgui_animation *anim)
 {
@@ -257,3 +276,4 @@ void rtgui_anim_stop(struct rtgui_animation *anim)
     anim->state = _ANIM_STOPPED;
     rtgui_timer_stop(anim->timer);
 }
+RTM_EXPORT(rtgui_anim_stop);
