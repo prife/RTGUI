@@ -71,42 +71,56 @@ rt_bool_t rtgui_graphic_driver_is_vmode(void)
 }
 RTM_EXPORT(rtgui_graphic_driver_is_vmode);
 
-struct rtgui_dc* rtgui_graphic_driver_get_rect_buffer(const struct rtgui_graphic_driver *driver, struct rtgui_rect *r)
+struct rtgui_dc*
+rtgui_graphic_driver_get_rect_buffer(const struct rtgui_graphic_driver *driver,
+                                     struct rtgui_rect *r)
 {
-	int w, h;
-	struct rtgui_dc_buffer *buffer;
-	rt_uint8_t *pixel, *dst;
-	struct rtgui_rect src, rect;
+    int w, h;
+    struct rtgui_dc_buffer *buffer;
+    rt_uint8_t *pixel, *dst;
+    struct rtgui_rect src, rect;
 
-	/* use virtual framebuffer in default */
-	if (driver == RT_NULL) driver = &_vfb_driver;
+    /* use virtual framebuffer in default */
+    if (driver == RT_NULL)
+        driver = &_vfb_driver;
 
-	rtgui_graphic_driver_get_rect(driver, &src);
-	rect = *r;
-	rtgui_rect_intersect(&src, &rect);
+    if (r == RT_NULL)
+    {
+        rtgui_graphic_driver_get_rect(driver, &rect);
+    }
+    else
+    {
+        rtgui_graphic_driver_get_rect(driver, &src);
+        rect = *r;
+        rtgui_rect_intersect(&src, &rect);
+    }
 
-	w = rtgui_rect_width (rect);
-	h = rtgui_rect_height(rect);
-	if (!(w && h) || driver->framebuffer == RT_NULL) return RT_NULL;
+    w = rtgui_rect_width (rect);
+    h = rtgui_rect_height(rect);
+    if (!(w && h) || driver->framebuffer == RT_NULL)
+        return RT_NULL;
 
-	/* create buffer DC */
-	buffer = (struct rtgui_dc_buffer*)rtgui_dc_buffer_create_pixformat(driver->pixel_format, w, h);
-	if (buffer == RT_NULL) return (struct rtgui_dc*)buffer;
+    /* create buffer DC */
+    buffer = (struct rtgui_dc_buffer*)rtgui_dc_buffer_create_pixformat(driver->pixel_format, w, h);
+    if (buffer == RT_NULL)
+        return (struct rtgui_dc*)buffer;
 
-	/* get source pixel */
-	pixel = (rt_uint8_t*)driver->framebuffer + rect.y1 * driver->pitch + rect.x1 * rtgui_color_get_bpp(driver->pixel_format);
+    /* get source pixel */
+    pixel = (rt_uint8_t*)driver->framebuffer
+        + rect.y1 * driver->pitch
+        + rect.x1 * rtgui_color_get_bpp(driver->pixel_format);
 
-	dst = buffer->pixel;
+    dst = buffer->pixel;
 
     while (h--)
     {
-		memcpy(dst, pixel, buffer->pitch);
+        memcpy(dst, pixel, buffer->pitch);
 
-		dst += buffer->pitch;
-		pixel += driver->pitch;
+        dst += buffer->pitch;
+        pixel += driver->pitch;
     }
 
-	return (struct rtgui_dc*)buffer;
+    return (struct rtgui_dc*)buffer;
 }
 RTM_EXPORT(rtgui_graphic_driver_get_rect_buffer);
 #else
