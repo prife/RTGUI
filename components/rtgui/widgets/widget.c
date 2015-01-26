@@ -705,11 +705,11 @@ void rtgui_widget_update(rtgui_widget_t *widget)
 
     RT_ASSERT(widget != RT_NULL);
 
-    if (RTGUI_OBJECT(widget)->event_handler != RT_NULL)
+    if (RTGUI_OBJECT(widget)->event_handler != RT_NULL &&
+        !(RTGUI_WIDGET_FLAG(widget) & RTGUI_WIDGET_FLAG_IN_ANIM))
     {
-        RTGUI_OBJECT(widget)->event_handler(
-            RTGUI_OBJECT(widget),
-            &paint.parent);
+        RTGUI_OBJECT(widget)->event_handler(RTGUI_OBJECT(widget),
+                                            &paint.parent);
     }
 }
 RTM_EXPORT(rtgui_widget_update);

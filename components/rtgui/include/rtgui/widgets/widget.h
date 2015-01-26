@@ -42,6 +42,7 @@ extern "C" {
 #define RTGUI_WIDGET_FLAG_TRANSPARENT   0x0008
 #define RTGUI_WIDGET_FLAG_FOCUSABLE     0x0010
 #define RTGUI_WIDGET_FLAG_DC_VISIBLE    0x0100
+#define RTGUI_WIDGET_FLAG_IN_ANIM       0x0200
 
 /* rtgui widget attribute */
 #define RTGUI_WIDGET_FOREGROUND(w)      (RTGUI_WIDGET(w)->gc.foreground)

@@ -264,6 +264,7 @@ void rtgui_anim_start(struct rtgui_animation *anim)
     if (anim->state == _ANIM_STOPPED)
     {
         anim->state = _ANIM_RUNNING;
+        RTGUI_WIDGET_FLAG(anim->parent) |= RTGUI_WIDGET_FLAG_IN_ANIM;
         rtgui_timer_start(anim->timer);
     }
 }
@@ -274,6 +275,7 @@ void rtgui_anim_stop(struct rtgui_animation *anim)
     RT_ASSERT(anim);
 
     anim->state = _ANIM_STOPPED;
+    RTGUI_WIDGET_FLAG(anim->parent) &= ~RTGUI_WIDGET_FLAG_IN_ANIM;
     rtgui_timer_stop(anim->timer);
 }
 RTM_EXPORT(rtgui_anim_stop);
