@@ -335,7 +335,9 @@ rtgui_font_t *rtgui_freetype_font_create(const char *filename, int bold, int ita
     struct rtgui_font *font;
     struct rtgui_freetype2_font *fft;
 
-    font = (struct rtgui_font *)rtgui_malloc(sizeof(struct rtgui_font) + sizeof(struct rtgui_freetype2_font));
+    font = (struct rtgui_font *)rtgui_malloc(sizeof(struct rtgui_font)
+                                             + sizeof(struct rtgui_freetype2_font));
+    rt_memset(font, 0, sizeof(struct rtgui_font) + sizeof(struct rtgui_freetype2_font));
     if (!font)
     {
         PERROR("failed to allocate structs\n");
@@ -383,7 +385,7 @@ rtgui_font_t *rtgui_freetype_font_create(const char *filename, int bold, int ita
     /* set user data */
     font->family = rt_strdup(fft->face->family_name);
     font->height = (rt_uint16_t)size;
-    font->refer_count = 0;
+    font->refer_count = 1;
     font->engine = &ftf_engine;
 
     /* add to system */
