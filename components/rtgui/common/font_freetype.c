@@ -25,8 +25,14 @@
 #define PINFO(...)
 #endif
 
-static void ftf_draw_text(struct rtgui_font *font, struct rtgui_dc *dc, const char *text, rt_ubase_t len, struct rtgui_rect *rect);
-static void ftf_get_metrics_nkern(struct rtgui_font *font, const char *text, rtgui_rect_t *rect);
+static void ftf_draw_text(struct rtgui_font *font,
+                          struct rtgui_dc *dc,
+                          const char *text,
+                          rt_ubase_t len,
+                          struct rtgui_rect *rect);
+static void ftf_get_metrics_nkern(struct rtgui_font *font,
+                                  const char *text,
+                                  rtgui_rect_t *rect);
 
 static const struct rtgui_font_engine ftf_engine =
 {
@@ -89,9 +95,11 @@ static void _draw_bitmap(struct rtgui_dc *dc,
     int rows;
     rt_uint8_t *ptr;
     FT_Bitmap *bitmap;
+    rt_int16_t xstart;
 
     bitmap = &slot->bitmap;
     ptr = (rt_uint8_t *)bitmap->buffer;
+    xstart = ox + slot->bitmap_left;
 
     for (rows = 0; rows < bitmap->rows; rows++)
     {
@@ -100,11 +108,15 @@ static void _draw_bitmap(struct rtgui_dc *dc,
 
         for (x = 0; x < bitmap->width; x++)
         {
+            /* Use 5bit alpha. */
             rt_uint8_t c = *ptr;
-            if (c > 0)
+            if (c >= 0xF8)
             {
-                rtgui_dc_blend_point(dc,
-                                     ox + x + slot->bitmap_left, y,
+                rtgui_dc_draw_point(dc, xstart + x, y);
+            }
+            else if (c >> 3)
+            {
+                rtgui_dc_blend_point(dc, xstart + x, y,
                                      RTGUI_BLENDMODE_BLEND,
                                      r, g, b, c);
             }
@@ -140,10 +152,10 @@ static void _draw_text_nkern(struct rtgui_dc *dc,
 }
 
 static void _draw_text_kern(struct rtgui_dc *dc,
-                             struct rtgui_freetype2_font *fft,
-                             rt_uint16_t *text_short,
-                             rt_int16_t begin_x, rt_int16_t begin_y,
-                             rt_uint8_t r, rt_uint8_t g, rt_uint8_t b)
+                            struct rtgui_freetype2_font *fft,
+                            rt_uint16_t *text_short,
+                            rt_int16_t begin_x, rt_int16_t begin_y,
+                            rt_uint8_t r, rt_uint8_t g, rt_uint8_t b)
 {
     rt_uint16_t *tp;
     FT_GlyphSlot  slot;
@@ -247,7 +259,11 @@ static void _get_metrics_nkern(FT_Face face, const rt_uint16_t *text_short, stru
         rt_uint16_t index;
 
         index = FT_Get_Char_Index(face, *text_short);
-        err = FT_Load_Glyph(face, index, FT_LOAD_DEFAULT);
+        err = FT_Load_Glyph(face, index,
+                            FT_LOAD_DEFAULT |
+                            FT_LOAD_NO_HINTING |
+                            FT_LOAD_IGNORE_TRANSFORM |
+                            FT_LOAD_NO_AUTOHINT);
 
         if (err == 0)
             w += face->glyph->advance.x >> 6;
@@ -258,7 +274,8 @@ static void _get_metrics_nkern(FT_Face face, const rt_uint16_t *text_short, stru
     rect->x1 = 0;
     rect->y1 = 0;
     rect->x2 = w;
-    rect->y2 = FT_MulFix(face->bbox.yMax - face->bbox.yMin, face->size->metrics.y_scale) >> 6;
+    rect->y2 = FT_MulFix(face->bbox.yMax - face->bbox.yMin,
+                         face->size->metrics.y_scale) >> 6;
 }
 
 static void _get_metrics_kern(FT_Face face, const rt_uint16_t *text_short, struct rtgui_rect *rect)
@@ -279,12 +296,16 @@ static void _get_metrics_kern(FT_Face face, const rt_uint16_t *text_short, struc
             FT_Vector delta;
 
             FT_Get_Kerning(face, prev_gidx, index,
-                            FT_KERNING_DEFAULT, &delta );
+                            FT_KERNING_DEFAULT, &delta);
 
             w += delta.x >> 6;
         }
         prev_gidx = index;
-        err = FT_Load_Glyph(face, index, FT_LOAD_DEFAULT);
+        err = FT_Load_Glyph(face, index,
+                            FT_LOAD_DEFAULT |
+                            FT_LOAD_NO_HINTING |
+                            FT_LOAD_IGNORE_TRANSFORM |
+                            FT_LOAD_NO_AUTOHINT);
 
         if (err == 0)
             w += face->glyph->advance.x >> 6;
@@ -295,7 +316,8 @@ static void _get_metrics_kern(FT_Face face, const rt_uint16_t *text_short, struc
     rect->x1 = 0;
     rect->y1 = 0;
     rect->x2 = w;
-    rect->y2 = FT_MulFix(face->bbox.yMax - face->bbox.yMin, face->size->metrics.y_scale) >> 6;
+    rect->y2 = FT_MulFix(face->bbox.yMax - face->bbox.yMin,
+                         face->size->metrics.y_scale) >> 6;
 }
 
 static void ftf_get_metrics_nkern(struct rtgui_font *font, const char *text, rtgui_rect_t *rect)
