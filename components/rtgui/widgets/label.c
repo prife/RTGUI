@@ -116,7 +116,7 @@ void rtgui_label_set_text(rtgui_label_t *label, const char *text)
         label->text = RT_NULL;
 
     /* update widget */
-    rtgui_theme_draw_label(label);
+    rtgui_widget_update(RTGUI_WIDGET(label));
 }
 RTM_EXPORT(rtgui_label_set_text);
 
