@@ -24,7 +24,6 @@
 
 #include "mouse.h"
 #include "topwin.h"
-#include "gesture.h"
 
 static struct rtgui_app *rtgui_server_app = RT_NULL;
 static struct rtgui_app *rtgui_wm_application = RT_NULL;
@@ -101,10 +100,6 @@ void rtgui_server_handle_mouse_btn(struct rtgui_event_mouse *event)
     {
         rtgui_topwin_activate_topwin(wnd);
     }
-
-	/* handle gesture event */
-	if (rtgui_gesture_handle(event, wnd) == 0)
-        return;
 
     /* send mouse event to thread */
     rtgui_send(wnd->app, (struct rtgui_event *)event, sizeof(struct rtgui_event_mouse));
