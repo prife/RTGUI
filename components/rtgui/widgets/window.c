@@ -675,21 +675,8 @@ rt_bool_t rtgui_win_event_handler(struct rtgui_object *object, struct rtgui_even
     break;
 
     case RTGUI_EVENT_MOUSE_MOTION:
-#if 0
-        if (rtgui_widget_dispatch_mouse_event(widget,
-                                              (struct rtgui_event_mouse *)event) == RT_FALSE)
-        {
-#ifndef RTGUI_USING_SMALL_SIZE
-            /* handle event in current widget */
-            if (widget->on_mousemotion != RT_NULL)
-            {
-                return widget->on_mousemotion(widget, event);
-            }
-#endif
-        }
-        else return RT_TRUE;
-#endif
-        break;
+        return rtgui_container_dispatch_mouse_event(RTGUI_CONTAINER(win),
+                                                    (struct rtgui_event_mouse *)event);
 
     case RTGUI_EVENT_KBD:
         /* we should dispatch key event firstly */
