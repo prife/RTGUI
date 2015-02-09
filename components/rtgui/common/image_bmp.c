@@ -185,6 +185,7 @@ static rt_bool_t rtgui_image_bmp_load(struct rtgui_image *image, struct rtgui_fi
         {
             break;
         }
+        bmp->pixels = RT_NULL;
 
         /* Prepare to decode */
         if (rtgui_filerw_seek(file, 0, RTGUI_FILE_SEEK_SET) < 0)
@@ -284,7 +285,6 @@ static rt_bool_t rtgui_image_bmp_load(struct rtgui_image *image, struct rtgui_fi
             bmp->pitch = bmp->w * (bmp->bit_per_pixel >> 3);
         }
         bmp->pad = ((bmp->pitch % 4) ? (4 - (bmp->pitch % 4)) : 0);
-        bmp->pixels = RT_NULL;
         bmp->filerw = file;
 
         image->w = (rt_uint16_t)bmp->w >> bmp->scale;
