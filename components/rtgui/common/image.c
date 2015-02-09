@@ -290,12 +290,26 @@ void rtgui_image_blit(struct rtgui_image *image, struct rtgui_dc *dc, struct rtg
 
     if (rtgui_dc_get_visible(dc) != RT_TRUE) return;
 
+    rtgui_dc_get_rect(dc, &r);
+
 	/* use rect of DC */
 	if (rect == RT_NULL)
 	{
-		rtgui_dc_get_rect(dc, &r);
 		rect = &r;
 	}
+    else
+    {
+        /* Don't modify x1, y1, they are handled in engine->image_blit. */
+        if (rect->x1 > r.x2)
+            return;
+        if (rect->y1 > r.y2)
+            return;
+
+        if (rect->x2 > r.x2)
+            rect->x2 = r.x2;
+        if (rect->y2 > r.y2)
+            rect->y2 = r.y2;
+    }
 
     if (image != RT_NULL && image->engine != RT_NULL)
     {
