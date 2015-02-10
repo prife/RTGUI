@@ -1458,29 +1458,40 @@ static void _fill_small_pie(struct rtgui_dc *dc,
     }
 }
 
-void rtgui_dc_fill_pie(struct rtgui_dc *dc, rt_int16_t x, rt_int16_t y, rt_int16_t rad, rt_int16_t start, rt_int16_t end)
+void rtgui_dc_fill_pie(struct rtgui_dc *dc,
+                       rt_int16_t x, rt_int16_t y, rt_int16_t rad,
+                       rt_int16_t start, rt_int16_t end)
 {
-	/* Sanity check radii */
-	if (rad < 0)
+    /* Sanity check radii */
+    if (rad < 0)
+        return;
+    if (rad == 0)
+    {
+        rtgui_dc_draw_point(dc, x, y);
+        return;
+    }
+
+    if (end - start >= 360)
+    {
+        rtgui_dc_fill_circle(dc, x, y, rad);
+        return;
+    }
+    if (start == end)
         return;
 
-	/*
+    /*
      * Fixup angles
      */
-	start = start % 360;
-    /* Cope with end == 360. */
-	end = end % 361;
-	if (start == end)
-        return;
-
-	/*
-     * Special case for rad=0 - draw a point 
-     */
-	if (rad == 0)
+    while (start < 0)
     {
-		rtgui_dc_draw_point(dc, x, y);
-		return;
-	}
+        start += 360;
+        end   += 360;
+    }
+    while (start >= 360)
+    {
+        start -= 360;
+        end   -= 360;
+    }
 
     if (end < start)
         end += 360;
@@ -1512,7 +1523,7 @@ void rtgui_dc_fill_pie(struct rtgui_dc *dc, rt_int16_t x, rt_int16_t y, rt_int16
                         start % 45, end % 45, start / 45);
     }
 
-	return;
+    return;
 }
 RTM_EXPORT(rtgui_dc_fill_pie);
 
