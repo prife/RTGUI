@@ -821,79 +821,81 @@ RTM_EXPORT(rtgui_win_get_title);
 #include <rtgui/driver.h>
 struct rtgui_dc *rtgui_win_get_drawing(rtgui_win_t * win)
 {
-	struct rtgui_dc *dc;
-	struct rtgui_rect rect;
+    struct rtgui_dc *dc;
+    struct rtgui_rect rect;
 
-	if (rtgui_app_self() == RT_NULL) return RT_NULL;
-	if (win == RT_NULL || !(win->flag & RTGUI_WIN_FLAG_CONNECTED)) return RT_NULL;
+    if (rtgui_app_self() == RT_NULL)
+        return RT_NULL;
+    if (win == RT_NULL || !(win->flag & RTGUI_WIN_FLAG_CONNECTED))
+        return RT_NULL;
 
-	if (win->app == rtgui_app_self())
-	{
-		/* under the same application context */
-		rtgui_region_t region;
-		rtgui_region_t clip_region;
+    if (win->app == rtgui_app_self())
+    {
+        /* under the same application context */
+        rtgui_region_t region;
+        rtgui_region_t clip_region;
 
-		rtgui_region_init(&clip_region);
-		rtgui_region_copy(&clip_region, &RTGUI_WIDGET(win)->clip);
+        rtgui_region_init(&clip_region);
+        rtgui_region_copy(&clip_region, &win->outer_clip);
 
-		rtgui_graphic_driver_vmode_enter();
+        rtgui_graphic_driver_vmode_enter();
 
-		rtgui_graphic_driver_get_rect(RT_NULL, &rect);
-	    region.data = RT_NULL;
-	    region.extents.x1 = rect.x1;
-	    region.extents.y1 = rect.y1;
-	    region.extents.x2 = rect.x2;
-	    region.extents.y2 = rect.y2;
-		
-		/* remove clip */
-	    rtgui_region_reset(&RTGUI_WIDGET(win)->clip,
-	                       &RTGUI_WIDGET(win)->extent);
-		rtgui_region_intersect(&(RTGUI_WIDGET(win)->clip),
-							   &(RTGUI_WIDGET(win)->clip),
-							   &region);
-		rtgui_win_update_clip(win);
-		/* use virtual framebuffer */
-		rtgui_widget_update(RTGUI_WIDGET(win));
+        rtgui_graphic_driver_get_rect(RT_NULL, &rect);
+        region.data = RT_NULL;
+        region.extents.x1 = rect.x1;
+        region.extents.y1 = rect.y1;
+        region.extents.x2 = rect.x2;
+        region.extents.y2 = rect.y2;
 
-		rtgui_graphic_driver_vmode_exit();
+        /* remove clip */
+        rtgui_region_reset(&win->outer_clip,
+                           &RTGUI_WIDGET(win)->extent);
+        rtgui_region_intersect(&win->outer_clip,
+                               &win->outer_clip,
+                               &region);
+        rtgui_win_update_clip(win);
+        /* use virtual framebuffer */
+        rtgui_widget_update(RTGUI_WIDGET(win));
 
-		/* get the extent of widget */
-		rtgui_widget_get_extent(RTGUI_WIDGET(win), &rect);
+        rtgui_graphic_driver_vmode_exit();
 
-		dc = rtgui_graphic_driver_get_rect_buffer(RT_NULL, &rect);
+        /* get the extent of widget */
+        rtgui_widget_get_extent(RTGUI_WIDGET(win), &rect);
 
-		/* restore the clip information of window */
-	    rtgui_region_reset(&RTGUI_WIDGET(win)->clip,
-	                       &RTGUI_WIDGET(win)->extent);
-		rtgui_region_intersect(&(RTGUI_WIDGET(win)->clip),
-							   &(RTGUI_WIDGET(win)->clip),
-							   &clip_region);
-		rtgui_region_fini(&region);
-		rtgui_region_fini(&clip_region);
+        dc = rtgui_graphic_driver_get_rect_buffer(RT_NULL, &rect);
 
-		rtgui_win_update_clip(win);
-	}
-	else
-	{
-		/* send vpaint_req to the window and wait for response */
-		struct rtgui_event_vpaint_req req;
-		struct rtgui_event_vpaint_ack ack;
-		int freeze;
+        /* restore the clip information of window */
+        rtgui_region_reset(&RTGUI_WIDGET(win)->clip,
+                           &RTGUI_WIDGET(win)->extent);
+        rtgui_region_intersect(&(RTGUI_WIDGET(win)->clip),
+                               &(RTGUI_WIDGET(win)->clip),
+                               &clip_region);
+        rtgui_region_fini(&region);
+        rtgui_region_fini(&clip_region);
 
-		/* make sure the screen is not locked. */
-		freeze = rtgui_screen_lock_freeze();
+        rtgui_win_update_clip(win);
+    }
+    else
+    {
+        /* send vpaint_req to the window and wait for response */
+        struct rtgui_event_vpaint_req req;
+        struct rtgui_event_vpaint_ack ack;
+        int freeze;
 
-		RTGUI_EVENT_VPAINT_REQ_INIT(&req, win);
-		rtgui_send(win->app, &(req.parent), sizeof(struct rtgui_event_vpaint_req));
+        /* make sure the screen is not locked. */
+        freeze = rtgui_screen_lock_freeze();
 
-		/* wait for vpaint_ack event */
-		rtgui_recv_filter(RTGUI_EVENT_VPAINT_ACK, &(ack.parent), sizeof(ack));
-		dc = ack.buffer;
+        RTGUI_EVENT_VPAINT_REQ_INIT(&req, win);
+        rtgui_send(win->app, &(req.parent), sizeof(struct rtgui_event_vpaint_req));
 
-		rtgui_screen_lock_thaw(freeze);
-	}
+        /* wait for vpaint_ack event */
+        rtgui_recv_filter(RTGUI_EVENT_VPAINT_ACK, &(ack.parent), sizeof(ack));
+        dc = ack.buffer;
 
-	return dc;
+        rtgui_screen_lock_thaw(freeze);
+    }
+
+    return dc;
 }
 RTM_EXPORT(rtgui_win_get_drawing);
 #endif
