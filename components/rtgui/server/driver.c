@@ -43,6 +43,7 @@ static void _graphic_driver_vmode_init(void)
 		_vfb_driver.height = _driver.height;
 		_vfb_driver.pitch  = _driver.width * _UI_BITBYTES(_vfb_driver.bits_per_pixel);
 		_vfb_driver.framebuffer = rtgui_malloc(_vfb_driver.height * _vfb_driver.pitch);
+        rt_memset(_vfb_driver.framebuffer, 0, _vfb_driver.height * _vfb_driver.pitch);
 		_vfb_driver.ext_ops = RT_NULL;
 		_vfb_driver.ops = rtgui_framebuffer_get_ops(_vfb_driver.pixel_format);
 	}
@@ -114,7 +115,7 @@ rtgui_graphic_driver_get_rect_buffer(const struct rtgui_graphic_driver *driver,
 
     while (h--)
     {
-        memcpy(dst, pixel, buffer->pitch);
+        rt_memcpy(dst, pixel, buffer->pitch);
 
         dst += buffer->pitch;
         pixel += driver->pitch;

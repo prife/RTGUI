@@ -93,26 +93,28 @@ RTM_EXPORT(rtgui_dc_buffer_create_pixformat);
 
 struct rtgui_dc *rtgui_dc_buffer_create_from_dc(struct rtgui_dc* dc)
 {
-	struct rtgui_dc_buffer *buffer;
+    struct rtgui_dc_buffer *buffer;
 
-	if (dc == RT_NULL) return RT_NULL;
+    if (dc == RT_NULL)
+        return RT_NULL;
 
-	if (dc->type == RTGUI_DC_BUFFER)
-	{
- 		struct rtgui_dc_buffer *d = (struct rtgui_dc_buffer*) dc;
+    if (dc->type == RTGUI_DC_BUFFER)
+    {
+        struct rtgui_dc_buffer *d = (struct rtgui_dc_buffer*) dc;
 
-		/* buffer clone */
-		buffer = (struct rtgui_dc_buffer*) rtgui_dc_buffer_create_pixformat(d->pixel_format,
-            d->width, d->height);
-		if (buffer != RT_NULL)
-		{
-			memcpy(buffer->pixel, d->pixel, d->pitch * d->height);
+        /* buffer clone */
+        buffer = (struct rtgui_dc_buffer*)rtgui_dc_buffer_create_pixformat(d->pixel_format,
+                                                                           d->width,
+                                                                           d->height);
+        if (buffer != RT_NULL)
+        {
+            rt_memcpy(buffer->pixel, d->pixel, d->pitch * d->height);
 
-			return RTGUI_DC(buffer);
-		}
-	}
+            return RTGUI_DC(buffer);
+        }
+    }
 
-	return RT_NULL;
+    return RT_NULL;
 }
 
 rt_uint8_t *rtgui_dc_buffer_get_pixel(struct rtgui_dc *dc)
@@ -413,7 +415,7 @@ static void rtgui_dc_buffer_blit(struct rtgui_dc *self, struct rtgui_point *dc_p
 				/* do the blit with memory copy */
 				for (index = 0; index < rect_height; index ++)
 				{
-					memcpy(hw_pixels, pixels, pitch);
+					rt_memcpy(hw_pixels, pixels, pitch);
 					pixels += dc->pitch;
 					hw_pixels += hw_driver->pitch;
 				}
@@ -506,7 +508,7 @@ static void rtgui_dc_buffer_blit(struct rtgui_dc *self, struct rtgui_point *dc_p
 
 			for (index = 0; index < rect_height; index ++)
 			{
-				memcpy(dest_pixels, pixels, pitch);
+				rt_memcpy(dest_pixels, pixels, pitch);
 				pixels += dc->pitch;
 				dest_pixels += dest_dc->pitch;
 			}
