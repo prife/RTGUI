@@ -41,16 +41,18 @@ static void _rgb565_draw_hline(rtgui_color_t *c, int x1, int x2, int y)
 
 static void _rgb565_draw_vline(rtgui_color_t *c, int x , int y1, int y2)
 {
+    struct rtgui_graphic_driver *drv;
     rt_uint8_t *dst;
     rt_uint16_t pixel;
     rt_ubase_t index;
 
+    drv = rtgui_graphic_get_device();
     pixel = rtgui_color_to_565(*c);
-    dst = GET_PIXEL(rtgui_graphic_get_device(), x, y1, rt_uint8_t);
+    dst = GET_PIXEL(drv, x, y1, rt_uint8_t);
     for (index = y1; index < y2; index ++)
     {
         *(rt_uint16_t *)dst = pixel;
-        dst += rtgui_graphic_get_device()->pitch;
+        dst += drv->pitch;
     }
 }
 
@@ -90,26 +92,31 @@ static void _rgb565p_draw_hline(rtgui_color_t *c, int x1, int x2, int y)
 
 static void _rgb565p_draw_vline(rtgui_color_t *c, int x , int y1, int y2)
 {
+    struct rtgui_graphic_driver *drv;
     rt_uint8_t *dst;
     rt_uint16_t pixel;
     rt_ubase_t index;
 
+    drv = rtgui_graphic_get_device();
     pixel = rtgui_color_to_565p(*c);
-    dst = GET_PIXEL(rtgui_graphic_get_device(), x, y1, rt_uint8_t);
+    dst = GET_PIXEL(drv, x, y1, rt_uint8_t);
     for (index = y1; index < y2; index ++)
     {
         *(rt_uint16_t *)dst = pixel;
-        dst += rtgui_graphic_get_device()->pitch;
+        dst += drv->pitch;
     }
 }
 
 /* draw raw hline */
 static void framebuffer_draw_raw_hline(rt_uint8_t *pixels, int x1, int x2, int y)
 {
+    struct rtgui_graphic_driver *drv;
     rt_uint8_t *dst;
 
-    dst = GET_PIXEL(rtgui_graphic_get_device(), x1, y, rt_uint8_t);
-    memcpy(dst, pixels, (x2 - x1) * _UI_BITBYTES(rtgui_graphic_get_device()->bits_per_pixel));
+    drv = rtgui_graphic_get_device();
+    dst = GET_PIXEL(drv, x1, y, rt_uint8_t);
+    rt_memcpy(dst, pixels,
+              (x2 - x1) * _UI_BITBYTES(drv->bits_per_pixel));
 }
 
 const struct rtgui_graphic_driver_ops _framebuffer_rgb565_ops =
@@ -130,12 +137,14 @@ const struct rtgui_graphic_driver_ops _framebuffer_rgb565p_ops =
     framebuffer_draw_raw_hline,
 };
 
-#define FRAMEBUFFER (rtgui_graphic_get_device()->framebuffer)
+#define FRAMEBUFFER (drv->framebuffer)
 #define MONO_PIXEL(framebuffer, x, y) \
     ((rt_uint8_t**)(framebuffer))[y/8][x]
 
 static void _mono_set_pixel(rtgui_color_t *c, int x, int y)
 {
+    struct rtgui_graphic_driver *drv = rtgui_graphic_get_device();
+
     if (*c == white)
         MONO_PIXEL(FRAMEBUFFER, x, y) &= ~(1 << (y % 8));
     else
@@ -144,6 +153,8 @@ static void _mono_set_pixel(rtgui_color_t *c, int x, int y)
 
 static void _mono_get_pixel(rtgui_color_t *c, int x, int y)
 {
+    struct rtgui_graphic_driver *drv = rtgui_graphic_get_device();
+
     if (MONO_PIXEL(FRAMEBUFFER, x, y) & (1 << (y % 8)))
         *c = black;
     else
@@ -152,6 +163,7 @@ static void _mono_get_pixel(rtgui_color_t *c, int x, int y)
 
 static void _mono_draw_hline(rtgui_color_t *c, int x1, int x2, int y)
 {
+    struct rtgui_graphic_driver *drv = rtgui_graphic_get_device();
     rt_ubase_t index;
 
     if (*c == white)
@@ -168,6 +180,7 @@ static void _mono_draw_hline(rtgui_color_t *c, int x1, int x2, int y)
 
 static void _mono_draw_vline(rtgui_color_t *c, int x , int y1, int y2)
 {
+    struct rtgui_graphic_driver *drv = rtgui_graphic_get_device();
     rt_ubase_t index;
 
     if (*c == white)
@@ -185,6 +198,7 @@ static void _mono_draw_vline(rtgui_color_t *c, int x , int y1, int y2)
 /* draw raw hline */
 static void _mono_draw_raw_hline(rt_uint8_t *pixels, int x1, int x2, int y)
 {
+    struct rtgui_graphic_driver *drv = rtgui_graphic_get_device();
     rt_ubase_t index;
 
     for (index = x1; index < x2; index ++)
