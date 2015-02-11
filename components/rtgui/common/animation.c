@@ -69,7 +69,7 @@ static void _anim_timeout(struct rtgui_timer *timer, void *parameter)
     RT_ASSERT(anim->parent);
     dc = rtgui_dc_begin_drawing(anim->parent);
     if (dc == RT_NULL)
-        return;
+        goto _end_draw;
 
     RT_ASSERT(anim->motion);
     RT_ASSERT(anim->engine);
@@ -79,6 +79,7 @@ static void _anim_timeout(struct rtgui_timer *timer, void *parameter)
 
     rtgui_dc_end_drawing(dc);
 
+_end_draw:
     if (anim->tick == anim->max_tick)
     {
         rtgui_anim_stop(anim);
