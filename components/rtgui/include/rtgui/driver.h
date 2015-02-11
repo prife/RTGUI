@@ -59,7 +59,7 @@ struct rtgui_graphic_driver
     rt_uint16_t height;
 
     /* framebuffer address and ops */
-    volatile rt_uint8_t *framebuffer;
+    rt_uint8_t *framebuffer;
     struct rt_device* device;
 
     const struct rtgui_graphic_driver_ops *ops;
