@@ -20,7 +20,6 @@ struct rtgui_image_hdc
     rt_uint8_t *pixels;
 
     struct rtgui_filerw *filerw;
-    const struct rtgui_graphic_driver *hw_driver;
 };
 
 static rt_bool_t rtgui_image_hdc_check(struct rtgui_filerw *file);
@@ -86,13 +85,6 @@ static rt_bool_t rtgui_image_hdc_load(struct rtgui_image *image, struct rtgui_fi
     hdc = (struct rtgui_image_hdc *) rtgui_malloc(sizeof(struct rtgui_image_hdc));
     if (hdc == RT_NULL) return RT_FALSE;
 
-    hdc->hw_driver = rtgui_graphic_driver_get_default();
-    if (hdc->hw_driver == RT_NULL)
-    {
-        rtgui_free(hdc);
-        return RT_FALSE;
-    }
-
     rtgui_filerw_read(file, (char *)&header, 1, sizeof(header));
 
     /* set image information */
@@ -105,7 +97,7 @@ static rt_bool_t rtgui_image_hdc_load(struct rtgui_image *image, struct rtgui_fi
 	if (header[3] == 0)
 	{
 		/* 0.x version */
-        hdc->pixel_format = hdc->hw_driver->pixel_format;
+        hdc->pixel_format = rtgui_graphic_driver_get_default()->pixel_format;
 	}
 	else if (header[3] == 1)
 	{
@@ -251,20 +243,21 @@ static void rtgui_image_hdc_blit(struct rtgui_image *image,
             {
                 struct rtgui_widget *owner;
                 struct rtgui_rect r;
+                struct rtgui_dc_hw *ddc = (struct rtgui_dc_hw *)dc;
 
                 owner = ((struct rtgui_dc_hw*)dc)->owner;
 
                 rtgui_graphic_driver_get_rect(RT_NULL, &r);
 
                 /* blit destination */
-                info.dst = (rt_uint8_t*)hdc->hw_driver->framebuffer;
-                info.dst = info.dst + (owner->extent.y1 + dst_rect->y1) * hdc->hw_driver->pitch +
-                    (owner->extent.x1 + dst_rect->x1) * rtgui_color_get_bpp(hdc->hw_driver->pixel_format);
-                info.dst_fmt = hdc->hw_driver->pixel_format;
+                info.dst = (rt_uint8_t*)ddc->hw_driver->framebuffer;
+                info.dst = info.dst + (owner->extent.y1 + dst_rect->y1) * ddc->hw_driver->pitch +
+                    (owner->extent.x1 + dst_rect->x1) * rtgui_color_get_bpp(ddc->hw_driver->pixel_format);
+                info.dst_fmt = ddc->hw_driver->pixel_format;
                 info.dst_h = h;
                 info.dst_w = w;
-                info.dst_pitch = hdc->hw_driver->pitch;
-                info.dst_skip = info.dst_pitch - info.dst_w * rtgui_color_get_bpp(hdc->hw_driver->pixel_format);
+                info.dst_pitch = ddc->hw_driver->pitch;
+                info.dst_skip = info.dst_pitch - info.dst_w * rtgui_color_get_bpp(ddc->hw_driver->pixel_format);
             }
 
             rtgui_blit(&info);
