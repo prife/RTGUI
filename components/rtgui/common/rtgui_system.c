@@ -327,8 +327,10 @@ FINSH_FUNCTION_EXPORT(list_guimem, display memory information);
 /* RTGUI Event Dump                                                     */
 /************************************************************************/
 
+//#define RTGUI_EVENT_DEBUG
+
 #ifdef RTGUI_EVENT_DEBUG
-const char *event_string[] =
+const char *rtgui_event_string[] =
 {
     /* application event */
     "APP_CREATE",           /* create an application */
@@ -405,7 +407,7 @@ static void rtgui_event_dump(struct rtgui_app* app, rtgui_event_t *event)
     }
     else
     {
-        rt_kprintf("%s -- %s --> %s ", sender, event_string[event->type], app->name);
+        rt_kprintf("%s -- %s --> %s ", sender, rtgui_event_string[event->type], app->name);
     }
 
     switch (event->type)
@@ -541,6 +543,9 @@ static void rtgui_event_dump(struct rtgui_app* app, rtgui_event_t *event)
                        monitor->rect.x2, monitor->rect.y2);
         }
     }
+    break;
+
+    default:
     break;
     }
 
@@ -698,7 +703,7 @@ rt_err_t rtgui_recv_filter(rt_uint32_t type, rtgui_event_t *event, rt_size_t eve
     {
         if (e->type == type)
         {
-        	memcpy(event, e, event_size);
+            rt_memcpy(event, e, event_size);
             return RT_EOK;
         }
         else
