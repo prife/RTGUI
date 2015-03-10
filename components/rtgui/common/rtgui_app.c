@@ -247,7 +247,7 @@ rt_bool_t rtgui_app_event_handler(struct rtgui_object *object, rtgui_event_t *ev
     case RTGUI_EVENT_APP_ACTIVATE:
         if (app->main_object != RT_NULL)
         {
-            rtgui_win_activate(RTGUI_WIN(app->main_object));
+            rtgui_win_show(RTGUI_WIN(app->main_object), RT_FALSE);
         }
         break;
 
