@@ -1798,10 +1798,10 @@ struct rtgui_dc *rtgui_dc_begin_drawing(rtgui_widget_t *owner)
     if (win == RT_NULL)
         return RT_NULL;
 
-#ifdef RTGUI_ONLY_DRAW_ACTIVE_WIN
-    if (!(win->flag & RTGUI_WIN_FLAG_ACTIVATE))
+    if (!(win->flag & RTGUI_WIN_FLAG_ACTIVATE) &&
+        (win->outer_clip.extents.x1 == win->outer_clip.extents.x2 ||
+         win->outer_clip.extents.y1 == win->outer_clip.extents.y2))
         return RT_NULL;
-#endif
 
     /* increase drawing count */
     win->drawing ++;
