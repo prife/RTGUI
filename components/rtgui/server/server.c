@@ -102,7 +102,9 @@ void rtgui_server_handle_mouse_btn(struct rtgui_event_mouse *event)
     }
 
     /* send mouse event to thread */
-    rtgui_send(wnd->app, (struct rtgui_event *)event, sizeof(struct rtgui_event_mouse));
+    rtgui_send(wnd->app,
+               (struct rtgui_event *)event,
+               sizeof(struct rtgui_event_mouse));
 }
 
 void rtgui_server_handle_mouse_motion(struct rtgui_event_mouse *event)
@@ -129,7 +131,9 @@ void rtgui_server_handle_mouse_motion(struct rtgui_event_mouse *event)
     {
         event->wid = last_monitor_topwin->wid;
         /* send mouse motion event */
-        rtgui_send(last_monitor_topwin->app, &(event->parent), sizeof(struct rtgui_event_mouse));
+        rtgui_send(last_monitor_topwin->app,
+                   &(event->parent),
+                   sizeof(struct rtgui_event_mouse));
     }
 
     if (last_monitor_topwin != win)
@@ -140,7 +144,9 @@ void rtgui_server_handle_mouse_motion(struct rtgui_event_mouse *event)
             event->wid = last_monitor_topwin->wid;
 
             /* send mouse motion event */
-            rtgui_send(last_monitor_topwin->app, &(event->parent), sizeof(struct rtgui_event_mouse));
+            rtgui_send(last_monitor_topwin->app,
+                       &(event->parent),
+                       sizeof(struct rtgui_event_mouse));
         }
     }
 
@@ -209,7 +215,7 @@ void rtgui_server_handle_touch(struct rtgui_event_touch *event)
 #endif
 
 static rt_bool_t rtgui_server_event_handler(struct rtgui_object *object,
-        struct rtgui_event *event)
+                                            struct rtgui_event *event)
 {
     RT_ASSERT(object != RT_NULL);
     RT_ASSERT(event != RT_NULL);
