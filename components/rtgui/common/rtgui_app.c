@@ -237,6 +237,8 @@ rt_bool_t rtgui_app_event_handler(struct rtgui_object *object, rtgui_event_t *ev
     case RTGUI_EVENT_WIN_DEACTIVATE:
     case RTGUI_EVENT_WIN_CLOSE:
     case RTGUI_EVENT_WIN_MOVE:
+    case RTGUI_EVENT_WIN_SHOW:
+    case RTGUI_EVENT_WIN_HIDE:
     case RTGUI_EVENT_KBD:
     case RTGUI_EVENT_GESTURE:
         _rtgui_application_dest_handle(app, event);
