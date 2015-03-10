@@ -478,6 +478,7 @@ static void rtgui_event_dump(struct rtgui_app* app, rtgui_event_t *event)
     case RTGUI_EVENT_WIN_ACTIVATE:
     case RTGUI_EVENT_WIN_DEACTIVATE:
     case RTGUI_EVENT_WIN_SHOW:
+    case RTGUI_EVENT_WIN_HIDE:
     case RTGUI_EVENT_WIN_MODAL_ENTER:
     {
         struct rtgui_event_win *win = (struct rtgui_event_win *)event;
