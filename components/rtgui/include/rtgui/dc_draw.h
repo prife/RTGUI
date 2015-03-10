@@ -52,7 +52,7 @@
  * and in the blend and add case, the RGB values are premultiplied by a.
  */
 
-#define DRAW_MUL(_a, _b) (((unsigned)(_a)*(_b))/255)
+#define DRAW_MUL(_a, _b) (((unsigned)(_a)*(_b))/256)
 
 #define DRAW_FASTSETPIXEL(type) \
     *pixel = (type) color
