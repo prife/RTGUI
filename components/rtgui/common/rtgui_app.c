@@ -247,7 +247,13 @@ rt_bool_t rtgui_app_event_handler(struct rtgui_object *object, rtgui_event_t *ev
     case RTGUI_EVENT_APP_ACTIVATE:
         if (app->main_object != RT_NULL)
         {
-            rtgui_win_show(RTGUI_WIN(app->main_object), RT_FALSE);
+            /* Let the polymorphism work. */
+            struct rtgui_event_win_show wev;
+
+            RTGUI_EVENT_WIN_SHOW_INIT(&wev);
+            wev.wid = (struct rtgui_win*)app->main_object;
+
+            rtgui_object_handle(app->main_object, &wev.parent);
         }
         break;
 
