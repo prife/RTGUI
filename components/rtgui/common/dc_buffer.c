@@ -274,13 +274,12 @@ static void rtgui_dc_buffer_fill_rect(struct rtgui_dc *self, struct rtgui_rect *
 	unsigned r, g, b, a;
 	rtgui_rect_t _r, *rect;
 
-
     RT_ASSERT(self);
-    RT_ASSERT(dst_rect);
+	if (dst_rect == RT_NULL) rtgui_dc_get_rect(self, &_r);
+	else _r = *dst_rect;
 
     dst = (struct rtgui_dc_buffer *)self;
 
-	_r = *dst_rect;
 	/* parameter checking */
     if (_r.x1 > dst->width)
         return;
