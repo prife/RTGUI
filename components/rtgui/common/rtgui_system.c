@@ -99,7 +99,7 @@ void rtgui_timer_destory(rtgui_timer_t *timer)
 
     /* stop timer firstly */
     rtgui_timer_stop(timer);
-    if (timer->pending_cnt != 0)
+    if (timer->pending_cnt != 0 && timer->app->ref_count != 0)
     {
         timer->state = RTGUI_TIMER_ST_DESTROY_PENDING;
     }
