@@ -600,6 +600,7 @@ void rtgui_edit_clear_text(struct rtgui_edit *edit)
     edit->visual.x = 0;
     edit->visual.y = 0;
     rtgui_widget_update(RTGUI_WIDGET(edit));
+    rtgui_edit_init_caret(edit, edit->visual);
     _edit_show_caret(edit);
 }
 RTM_EXPORT(rtgui_edit_clear_text);
