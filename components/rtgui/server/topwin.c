@@ -53,7 +53,6 @@
 #define IS_ROOT_WIN(topwin) ((topwin)->parent == RT_NULL)
 
 static rt_list_t _rtgui_topwin_list = RT_LIST_OBJECT_INIT(_rtgui_topwin_list);
-static struct rt_semaphore _rtgui_topwin_lock;
 
 static void rtgui_topwin_update_clip(void);
 static void rtgui_topwin_redraw(struct rtgui_rect *rect);
@@ -61,8 +60,6 @@ static void _rtgui_topwin_activate_next(enum rtgui_topwin_flag);
 
 void rtgui_topwin_init(void)
 {
-    /* initialize semaphore */
-    rt_sem_init(&_rtgui_topwin_lock, "wintree", 1, RT_IPC_FLAG_FIFO);
 }
 
 static struct rtgui_topwin *rtgui_topwin_search_in_list(struct rtgui_win *window,
