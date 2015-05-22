@@ -34,7 +34,7 @@ static rt_uint16_t _last_x = RT_UINT16_MAX;
 static rt_uint16_t _last_y = RT_UINT16_MAX;
 #define _GS_HANDLING	((_last_x != RT_UINT16_MAX) && (_last_y  != RT_UINT16_MAX))
 
-static _rtgui_gesture_recognition(struct rtgui_event_mouse* event)
+static int _rtgui_gesture_recognition(struct rtgui_event_mouse* event)
 {
 	int gesture = RTGUI_GESTURE_NONE;
 
