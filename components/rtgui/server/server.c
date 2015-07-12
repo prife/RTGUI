@@ -421,9 +421,11 @@ rt_err_t rtgui_server_post_event_sync(struct rtgui_event *event, rt_size_t size)
     }
 }
 
+static rt_thread_t server_tid;
 struct rtgui_app* rtgui_get_server(void)
 {
-    rt_thread_t tid = rt_thread_find("rtgui");
+    /* rt_thread_t tid = rt_thread_find("rtgui"); */
+    rt_thread_t tid = server_tid;
 
     if (tid == RT_NULL)
         return RT_NULL;
@@ -440,7 +442,7 @@ void rtgui_server_init(void)
                            RTGUI_SVR_THREAD_STACK_SIZE,
                            RTGUI_SVR_THREAD_PRIORITY,
                            RTGUI_SVR_THREAD_TIMESLICE);
-
+    tid = server_tid;
     /* start rtgui server thread */
     if (tid != RT_NULL)
         rt_thread_startup(tid);
